@@ -237,21 +237,3 @@ class Atom:
 
     def list_transitions(self):
         return self.transitions
-
-    def line_table(self, **kwargs):
-        table = DataFrame(columns=["configuration", "term", "level",
-                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                   "color", "y0", "hf", "z",
-                                   "y", "x0", "x1"])
-        for level in self.levels.values():
-            table = table.append(level.plottable_table(**kwargs), ignore_index=True)
-        return table
-
-    def transition_table(self, **kwargs):
-        table = DataFrame(columns = [u'F_0', u'J_0', u'configuration_0', u'hf_0', u'level_0', u'm_F_0',
-       u'term_0', u'x0_0', u'x1_0', u'y_0', u'y0_0', u'z_0', u'F_1', u'J_1',
-       u'configuration_1', u'hf_1', u'level_1', u'm_F_1', u'term_1', u'x0_1',
-       u'x1_1', u'y_1', u'y0_1', u'z_1', u'delta_l', u'color', u'wavelength'])
-        for transition in self.transitions.values():
-            table = table.append(transition.plottable_table(**kwargs), ignore_index=True)
-        return table
