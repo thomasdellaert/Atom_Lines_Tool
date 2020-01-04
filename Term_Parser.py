@@ -48,7 +48,6 @@ def read_term(term):
     return L, S, K, j1, j2, parity
 
 def parse_table(path):
-    # TODO: docstring
     # Parse the input file that contains all the atomic data
     df = read_csv(path)
     df = df.iloc[:250]

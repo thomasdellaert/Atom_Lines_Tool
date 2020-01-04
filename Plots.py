@@ -12,7 +12,7 @@ Created on Mon Dec 16 13:57:39 2019
 
 from bokeh.io import output_file, show
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import HoverTool, Label, LabelSet, Slider, CustomJS
+import bokeh.models
 from bokeh.layouts import row, column
 from scipy import interpolate
 from pandas import DataFrame
@@ -35,19 +35,16 @@ def build_reference_plot(df, nstates):
         y0=df["Level (THz)"][:nstates],
         term=df["Term"][:nstates], ))
 
-    labels = LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
-                      x_offset=-5, y_offset=0, text_font_size="8pt")
+    labels = bokeh.models.LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
+                                   x_offset=-5, y_offset=0, text_font_size="8pt")
 
-    hover = HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
+    hover = bokeh.models.HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
     p.add_tools(hover)
     p.segment("x0", "y0", "x1", "y0", line_width=2, source=source)
     p.add_layout(labels)
 
     show(p)
 
-
-# TODO: Make a Grotrian class with methods like g.transition, g.level, g.label_level, g.label_splitting. g.build_figure.
-# TODO: migrate any references to plotting from the atoms/levels/transitions and move it into the plotting classes.
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -184,6 +181,8 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table.append(self.transition_table(transition, **kwargs))
         return self.plot_transition_table
 
+    # TODO: add level(all), add transition(all), remove_level, remove_transition, level_style(), transition_style()
+
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1e3), title=None, scale_splitting=3000):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=(0, 4))
         line_source = ColumnDataSource(self.plot_line_table)
@@ -194,17 +193,17 @@ class Grotrian:
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
 
-        hover_lines = HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
-                                          ("Level", "@level{0.000000}")], renderers=[lines])
-        hover_arrows = HoverTool(tooltips=[("Frequency", "@delta_l{0.000000} THz"),
-                                           ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
+        hover_lines = bokeh.models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
+                                                       ("Level", "@level{0.000000}")], renderers=[lines])
+        hover_arrows = bokeh.models.HoverTool(tooltips=[("Frequency", "@delta_l{0.000000} THz"),
+                                                        ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
-        scale_slider = Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
-        b_field_slider = Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
+        scale_slider = bokeh.models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
+        b_field_slider = bokeh.models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
 
-        line_callback = CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
+        line_callback = bokeh.models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
@@ -222,7 +221,7 @@ class Grotrian:
                 source.change.emit();
             """)
 
-        arrow_callback = CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
+        arrow_callback = bokeh.models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
@@ -262,8 +261,10 @@ class Grotrian:
 if __name__ == "__main__":
     from Atom_Library import Yb_171, Yb_173, Yb_174
 
-    g = Grotrian(Yb_173)
-    g.add_level(Yb_173.list_levels().values())
-    g.add_transition(Yb_173.list_transitions().values())
+    atom = Yb_171
+
+    g = Grotrian(atom)
+    g.add_level(atom.list_levels().values())
+    g.add_transition(atom.list_transitions().values())
 
     g.build_figure()
