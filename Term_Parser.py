@@ -8,6 +8,13 @@ def fraction_to_float(frac):
     else:
         return float(frac)
 
+def term_frac(term):
+    num = int(term / 0.5)
+    if num % 2 != 0:
+        return str(num) + "/2"
+    else:
+        return str(num / 2)
+
 def read_term(term):
     """
     Take a term in LS, JK, or jj coupling and returns the good quantum numbers as floats.

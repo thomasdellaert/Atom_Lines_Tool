@@ -1,15 +1,6 @@
 from pandas import DataFrame
-from scipy import interpolate
 import pandas as pd
-
-
-def term_frac(term):
-    num = int(term / 0.5)
-    if num % 2 != 0:
-        return str(num) + "/2"
-    else:
-        return str(num / 2)
-
+from Term_Parser import term_frac
 
 class EnergyLevel:
     # TODO: isotope shifts! Frequencies are currently off by like terahertz
@@ -183,12 +174,13 @@ class Transition:
         d_F = self.F_1 - self.F_0
         d_J = self.J_1 - self.J_0
 
+        transition_type = "unknown"
         if abs(d_J) <= 1 and not (self.J_0 == 0  and self.J_1 == 0):
             if abs(d_F) <= 1:
                 if self.parity_0 != self.parity_1:
                     transition_type = "E1"
 
-        return "dm: {}, dF: {}, dJ:{}".format(d_m, d_F, d_J)
+        return "dm: {}, dF: {}, dJ:{}".format(d_m, d_F, d_J), transition_type
 
 
 class Atom:
