@@ -1,7 +1,7 @@
 from Atoms import *
 from Term_Parser import parse_table
 
-df_Yb = df = parse_table("YbII_NIST.csv")
+df_Yb = df = parse_table("YbII_NIST_levels.csv")
 
 Yb_173 = Atom(name="173Yb")
 S12_173 = EnergyLevel(df, 0, I=2.5, A_coeff=-3.4975e-3, B_coeff=0.0)  # 2S1/2

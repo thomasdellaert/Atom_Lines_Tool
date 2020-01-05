@@ -1,7 +1,7 @@
 from pandas import read_csv
 
-#TODO: Potentially make it possible to also parse the ADS lines form to get observed transitions. In this case we'd also want to categorize them as E1, M2, etc
-
+# TODO: Potentially make it possible to also parse the ADS lines form to get observed transitions. In this case we'd also want to categorize them as E1, M2, etc
+# TODO: Make a parser for the DREAM table that reconciles with NIST data. This will be tedious.
 def fraction_to_float(frac):
     if "/" in frac:
         return float(frac.split("/")[0]) / float(frac.split("/")[1])
