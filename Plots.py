@@ -12,7 +12,7 @@ Created on Mon Dec 16 13:57:39 2019
 
 from bokeh.io import output_file, show
 from bokeh.plotting import figure, ColumnDataSource
-import bokeh.models
+import bokeh.models as models
 from bokeh.layouts import row, column
 from scipy import interpolate
 from pandas import DataFrame
@@ -23,6 +23,7 @@ import pandas as pd
 def build_reference_plot(df, nstates):
     """
     Generate a reference plot used to pick out the levels that you care about.
+
     Those will receive their own EnergyLevel objects, with more versatile plotting options.
     Requires a datafile produced from NIST by the term parser.
     """
@@ -35,10 +36,10 @@ def build_reference_plot(df, nstates):
         y0=df["Level (THz)"][:nstates],
         term=df["Term"][:nstates], ))
 
-    labels = bokeh.models.LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
-                                   x_offset=-5, y_offset=0, text_font_size="8pt")
+    labels = models.LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
+                             x_offset=-5, y_offset=0, text_font_size="8pt")
 
-    hover = bokeh.models.HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
+    hover = models.HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
     p.add_tools(hover)
     p.segment("x0", "y0", "x1", "y0", line_width=2, source=source)
     p.add_layout(labels)
@@ -193,17 +194,17 @@ class Grotrian:
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
 
-        hover_lines = bokeh.models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
+        hover_lines = models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
                                                        ("Level", "@level{0.000000}")], renderers=[lines])
-        hover_arrows = bokeh.models.HoverTool(tooltips=[("Frequency", "@delta_l{0.000000} THz"),
+        hover_arrows = models.HoverTool(tooltips=[("Frequency", "@delta_l{0.000000} THz"),
                                                         ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
-        scale_slider = bokeh.models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
-        b_field_slider = bokeh.models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
+        scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
+        b_field_slider = models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
 
-        line_callback = bokeh.models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
+        line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
@@ -221,7 +222,7 @@ class Grotrian:
                 source.change.emit();
             """)
 
-        arrow_callback = bokeh.models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
+        arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
