@@ -1,6 +1,6 @@
 from pandas import DataFrame
 import pandas as pd
-from Term_Parser import term_frac
+from parsers import term_frac
 
 class EnergyLevel:
     # TODO: isotope shifts! Frequencies are currently off by like terahertz
@@ -78,24 +78,6 @@ class EnergyLevel:
     def rename(self, n):
         self.name = n
 
-    # def physics_table(self):
-    #     table = DataFrame(columns=["configuration", "term", "level",
-    #                                "J", "F", "m_F", "y0", "hf", "z"])
-    #     for F in self.Fs:
-    #         for m_F in self.z_shifts[F].keys():
-    #             z = self.z_shifts[F][m_F]
-    #             hf = self.hf_shifts[F]
-    #             y = y0 + self.hf_shifts[F] * scale + self.z_shifts[F][m_F] * scale
-    #             level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]
-    #             line = DataFrame(
-    #                 data={"configuration": [self.configuration], "term": [self.term], "level": level,
-    #                       "J"            : [self.J], "F": [F], "m_F": [m_F],
-    #                       "J_frac"       : [term_frac(self.J)], "F_frac": [term_frac(F)],
-    #                       "m_F_frac"     : [term_frac(m_F)],
-    #                       "color"        : [params["color"]], "y0": [y0], "hf": [hf], "z": [z],
-    #                       "y"            : [y], "x0": [x], "x1": [x1]})
-    #             table = table.append(line, ignore_index=True)
-
     def data_table(self, hf=True, zeeman=True):
         table = DataFrame(columns=["configuration", "term", "level",
                                    "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
@@ -142,7 +124,7 @@ class Transition:
 
         self.transition_table = self.data_table()
 
-        self.name = str(self.transition_table["term_0"]) + "->" + str(self.transition_table["term_1"])
+        self.name = self.transition_table["term_0"][0] + "->" + self.transition_table["term_1"][0]
 
     def data_table(self):
 
@@ -166,6 +148,7 @@ class Transition:
 
         data_table["delta_l"] = [delta_l]
         data_table["wavelength"] = [wavelength]
+        data_table["name"] = [self.name]
         return data_table
 
     def get_type(self):
