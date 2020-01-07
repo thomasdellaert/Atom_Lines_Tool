@@ -1,7 +1,7 @@
-from Atoms import *
-from Term_Parser import parse_table
+from atoms import *
+from parsers import parse_NIST_levels
 
-df_Yb = df = parse_table("YbII_NIST_levels.csv")
+df_Yb = df = parse_NIST_levels("YbII_NIST_levels.csv")
 
 Yb_173 = Atom(name="173Yb")
 S12_173 = EnergyLevel(df, 0, I=2.5, A_coeff=-3.4975e-3, B_coeff=0.0)  # 2S1/2
@@ -39,10 +39,12 @@ Yb_171.add_level(levels_171)
 
 repump_171 = Transition(level_0=D52_171, F_0=2, m_F_0=0, level_1=P32_171, F_1=1, m_F_1=0)
 cycling_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
-four_eleven_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=D52_171, F_1 = 2, m_F_1=0)
+four_eleven_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=D52_171, F_1=3, m_F_1=0)
+test = Transition(level_0=S12_171, F_0 = 0, m_F_0=0, level_1=D32_171, F_1=2, m_F_1=0)
 
-transitions_171 = (repump_171, cycling_171, four_eleven_171)
+transitions_171 = (repump_171, cycling_171, four_eleven_171, test)
 Yb_171.add_transition(transitions_171)
+
 
 Yb_174 = Atom(name="174Yb")
 S12_174 = EnergyLevel(df, 0)
@@ -57,5 +59,8 @@ B52_174 = EnergyLevel(df, 5)
 levels_174 = (S12_174, P12_174, P32_174, F72_174, D32_174, D52_174, B32_174, B52_174)
 Yb_174.add_level(levels_174)
 
+# Yb_174.add_transition([Transition(level_0=S12_174, F_0=0.5, m_F_0=0.5, level_1=P12_174, F_1=0.5, m_F_1=0.5)])
+
 if __name__ == "__main__":
-    print Yb_171.list_levels()
+    print four_eleven_171.name
+    print four_eleven_171.transition_table["term_0"][0]
