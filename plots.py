@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec 16 13:57:39 2019
-
-@author: Thomas Dellaert
-
-"""
 # TODO: Horizontal line plot given two levels (like in page 92 of Foot, or like in Barends/Maleki)
 # TODO: Lorentzian plot
 # TODO: King plot
@@ -16,35 +9,8 @@ import bokeh.models as models
 from bokeh.layouts import row, column
 from scipy import interpolate
 from pandas import DataFrame
-from Term_Parser import term_frac
+from parsers import term_frac
 import pandas as pd
-
-
-def build_reference_plot(df, nstates):
-    """
-    Generate a reference plot used to pick out the levels that you care about.
-
-    Those will receive their own EnergyLevel objects, with more versatile plotting options.
-    Requires a datafile produced from NIST by the term parser.
-    """
-
-    p = figure(plot_width=600, plot_height=800, y_range=(-1e3, df["Level (cm-1)"][nstates] * 1.1))
-
-    source = ColumnDataSource(data=dict(
-        x0=df["J"][:nstates],
-        x1=df["J"][:nstates] + 1,
-        y0=df["Level (THz)"][:nstates],
-        term=df["Term"][:nstates], ))
-
-    labels = models.LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
-                             x_offset=-5, y_offset=0, text_font_size="8pt")
-
-    hover = models.HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
-    p.add_tools(hover)
-    p.segment("x0", "y0", "x1", "y0", line_width=2, source=source)
-    p.add_layout(labels)
-
-    show(p)
 
 
 class Grotrian:
@@ -184,7 +150,7 @@ class Grotrian:
 
     # TODO: add level(all), add transition(all), remove_level, remove_transition, level_style(), transition_style()
 
-    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1e3), title=None, scale_splitting=3000):
+    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1e3), title=None, scale_splitting=1):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=(0, 4))
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -196,14 +162,13 @@ class Grotrian:
 
         hover_lines = models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
                                                        ("Level", "@level{0.000000}")], renderers=[lines])
-        hover_arrows = models.HoverTool(tooltips=[("Frequency", "@delta_l{0.000000} THz"),
+        hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
                                                         ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
         scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
         b_field_slider = models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
-
         line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
@@ -221,7 +186,6 @@ class Grotrian:
                 };       
                 source.change.emit();
             """)
-
         arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
                 var data = source.data;
                 var b_field = b_field.value;
@@ -248,7 +212,6 @@ class Grotrian:
                 };
                 source.change.emit();
             """)
-
         scale_slider.js_on_change('value', line_callback)
         scale_slider.js_on_change('value', arrow_callback)
         b_field_slider.js_on_change('value', line_callback)
@@ -260,12 +223,13 @@ class Grotrian:
 
 
 if __name__ == "__main__":
-    from Atom_Library import Yb_171, Yb_173, Yb_174
+    from atom_library import Yb_171, Yb_173, Yb_174
 
     atom = Yb_171
 
     g = Grotrian(atom)
     g.add_level(atom.list_levels().values())
+    print atom.list_transitions()
     g.add_transition(atom.list_transitions().values())
 
     g.build_figure()
