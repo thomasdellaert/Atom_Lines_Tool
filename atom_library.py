@@ -16,10 +16,10 @@ B52_173 = EnergyLevel(df, 5, I=2.5, A_coeff=-0.055e-3, B_coeff=-1.72e-3)  # 1D[5
 levels_173 = (S12_173, P12_173, P32_173, F72_173, D32_173, D52_173, B32_173, B52_173)
 Yb_173.add_level(levels_173)
 
-repump_173 =            Transition(level_0=D52_173, F_0=4, m_F_0=0, level_1=P32_173, F_1=3, m_F_1=0)
-cycling_173 =           Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=P12_173, F_1=3, m_F_1=0)
-four_sixty_seven_173 =  Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=F72_173, F_1=5, m_F_1=0)
-four_eleven_173 =       Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=D52_173, F_1=3, m_F_1=0)
+repump_173 =           Transition(level_0=D52_173, F_0=4, m_F_0=0, level_1=P32_173, F_1=3, m_F_1=0)
+cycling_173 =          Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=P12_173, F_1=3, m_F_1=0)
+four_sixty_seven_173 = Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=F72_173, F_1=5, m_F_1=0)
+four_eleven_173 =      Transition(level_0=S12_173, F_0=2, m_F_0=0, level_1=D52_173, F_1=3, m_F_1=0)
 
 transitions_173 = (repump_173, cycling_173, four_sixty_seven_173, four_eleven_173)
 Yb_173.add_transition(transitions_173)
@@ -37,10 +37,10 @@ B52_171 = EnergyLevel(df, 5, I=0.5, A_coeff=-0.199e-3)  # 1D[5/2]5/2
 levels_171 = (S12_171, P12_171, P32_171, F72_171, D32_171, D52_171, B32_171, B52_171)
 Yb_171.add_level(levels_171)
 
-repump_171 = Transition(level_0=D52_171, F_0=2, m_F_0=0, level_1=P32_171, F_1=1, m_F_1=0)
-cycling_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
+repump_171 =      Transition(level_0=D52_171, F_0=2, m_F_0=0, level_1=P32_171, F_1=1, m_F_1=0)
+cycling_171 =     Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
 four_eleven_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=D52_171, F_1=3, m_F_1=0)
-test = Transition(level_0=S12_171, F_0 = 0, m_F_0=0, level_1=D32_171, F_1=2, m_F_1=0)
+test =            Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=D32_171, F_1=2, m_F_1=0)
 
 transitions_171 = (repump_171, cycling_171, four_eleven_171, test)
 Yb_171.add_transition(transitions_171)
@@ -62,4 +62,4 @@ Yb_174.add_level(levels_174)
 # Yb_174.add_transition([Transition(level_0=S12_174, F_0=0.5, m_F_0=0.5, level_1=P12_174, F_1=0.5, m_F_1=0.5)])
 
 if __name__ == "__main__":
-    print four_eleven_171.name
+    print four_eleven_171.transition_table

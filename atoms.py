@@ -84,10 +84,9 @@ class EnergyLevel:
                                    "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
         if not hf:
             line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": self.level,
-                                   "J"            : [self.J], "F": [None], "m_F": [None],
-                                   "J_frac"       : [term_frac(self.J)], "F_frac": [None],
-                                   "m_F_frac"     : [None],
-                                   "hf"           : [0.0], "z": [0.0]})
+                                   "J": [self.J], "F": [None], "m_F": [None],
+                                   "J_frac": [term_frac(self.J)], "F_frac": [None], "m_F_frac": [None],
+                                   "hf": [0.0], "z": [0.0]})
             table = table.append(line, ignore_index=True)
         else:
             for F in self.Fs:
@@ -95,10 +94,9 @@ class EnergyLevel:
                     hyperfine = self.hf_shifts[F]
                     level = self.hf_levels[F]
                     line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": level,
-                                           "J"            : [self.J], "F": [F], "m_F": [None],
-                                           "J_frac"       : [term_frac(self.J)], "F_frac": [term_frac(F)],
-                                           "m_F_frac"     : [None],
-                                           "hf"           : [hyperfine], "z": [0.0]})
+                                           "J": [self.J], "F": [F], "m_F": [None],
+                                           "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
+                                           "hf": [hyperfine], "z": [0.0]})
                     table = table.append(line, ignore_index=True)
                 else:
                     for m_F in self.z_shifts[F].keys():
@@ -107,10 +105,9 @@ class EnergyLevel:
                         level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]
                         line = DataFrame(
                             data={"configuration": [self.configuration], "term": [self.term], "level": level,
-                                  "J"            : [self.J], "F": [F], "m_F": [m_F],
-                                  "J_frac"       : [term_frac(self.J)], "F_frac": [term_frac(F)],
-                                  "m_F_frac"     : [term_frac(m_F)],
-                                  "hf"           : [hyperfine], "z": [z]})
+                                  "J": [self.J], "F": [F], "m_F": [m_F],
+                                  "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
+                                  "hf": [hyperfine], "z": [z]})
                         table = table.append(line, ignore_index=True)
         return table
 
@@ -122,10 +119,9 @@ class Transition:
         self.J_0, self.J_1 = level_0.J, level_1.J
         self.L_0, self.L_1 = level_0.L, level_1.L
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
-        self.name = level_0.term + "->" + level_1.term
+        self.name = level_0.name + "->" + level_1.name
 
         self.transition_table = self.data_table()
-
 
     def data_table(self):
 

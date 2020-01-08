@@ -12,6 +12,9 @@ from pandas import DataFrame
 from parsers import term_frac
 import pandas as pd
 
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -229,7 +232,7 @@ if __name__ == "__main__":
 
     g = Grotrian(atom)
     g.add_level(atom.list_levels().values())
-    print atom.list_transitions()
     g.add_transition(atom.list_transitions().values())
+    print g.plot_transition_table
 
     g.build_figure()
