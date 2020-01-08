@@ -12,9 +12,6 @@ from pandas import DataFrame
 from parsers import term_frac
 import pandas as pd
 
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -35,7 +32,7 @@ class Grotrian:
         table = DataFrame(columns=["configuration", "term", "level",
                                    "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
                                    "color", "y0", "hf", "z",
-                                   "y", "x0", "x1"])
+                                   "y", "x0", "x1", "name"])
         if not override_position:
             x0 = level.J + offset_position[0] - width / 2
             y0 = level.level + offset_position[1]
@@ -50,7 +47,7 @@ class Grotrian:
                                    "J": [level.J], "F": [None], "m_F": [None],
                                    "J_frac": [term_frac(level.J)], "F_frac": [None], "m_F_frac": [None],
                                    "color": [color], "y0": [y0], "hf": [0.0], "z": [0.0],
-                                   "y": [y0], "x0": [x0], "x1": [x1]})
+                                   "y": [y0], "x0": [x0], "x1": [x1], "name": [level.name]})
             table = table.append(line, ignore_index=True)
         else:
             for F in level.Fs:
@@ -63,7 +60,7 @@ class Grotrian:
                                            "J": [level.J], "F": [F], "m_F": [None],
                                            "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
                                            "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
-                                           "y": [y], "x0": [x0], "x1": [x1]})
+                                           "y": [y], "x0": [x0], "x1": [x1], "name": [level.name]})
                     table = table.append(line, ignore_index=True)
                 else:
                     delta = sublevel_spacing
@@ -81,7 +78,7 @@ class Grotrian:
                                   "J": [level.J], "F": [F], "m_F": [m_F],
                                   "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
                                   "color": [color], "y0": [y0], "hf": [hf], "z": [z],
-                                  "y": [y], "x0": [x], "x1": [x1]})
+                                  "y": [y], "x0": [x], "x1": [x1], "name": [level.name]})
                         table = table.append(line, ignore_index=True)
         return table
     
@@ -139,6 +136,8 @@ class Grotrian:
         transition_table["delta_l"] = [delta_l]
         transition_table["color"] = [color]
         transition_table["wavelength"] = [wavelength]
+        transition_table["name"] = [transition.name]
+
         return transition_table
 
     def add_level(self, levels, **kwargs):
@@ -163,7 +162,7 @@ class Grotrian:
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
 
-        hover_lines = models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
+        hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
                                                   ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
@@ -226,13 +225,16 @@ class Grotrian:
 
 
 if __name__ == "__main__":
-    from atom_library import Yb_171, Yb_173, Yb_174
+    from atom_library import Yb_171, Yb_173, Yb_174, Yb_171_big
 
-    atom = Yb_171
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', 500)
+    pd.set_option('display.width', 1000)
+
+    atom = Yb_171_big
 
     g = Grotrian(atom)
-    g.add_level(atom.list_levels().values())
-    g.add_transition(atom.list_transitions().values())
-    print g.plot_transition_table
+    g.add_level(atom.levels.values())
+    g.add_transition(atom.transitions.values())
 
     g.build_figure()

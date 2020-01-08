@@ -76,8 +76,13 @@ class EnergyLevel:
                 m_F += 1
         return z_levels, z_shifts
 
-    def rename(self, n):
-        self.name = n
+    def rename(self, name):
+        if name == "term":
+            self.name = self.term + term_frac(self.J)
+        elif name == "full":
+            self.name = self.configuration + " " + self.term + term_frac(self.J)
+        else:
+            self.name = name
 
     def data_table(self, hf=True, zeeman=True):
         table = DataFrame(columns=["configuration", "term", "level",
@@ -204,11 +209,6 @@ class Atom:
         else:
             raise ValueError("Unrecognized mode")
 
-    def list_levels(self):
-        return self.levels
-
-    def list_transitions(self):
-        return self.transitions
 
 
 if __name__ == "__main__":
