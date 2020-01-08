@@ -15,17 +15,17 @@ import pandas as pd
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
-        self.hf=hf
-        self.zeeman=zeeman
+        self.hf = hf
+        self.zeeman = zeeman
         self.atom = atom
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
-                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                   "color", "y0", "hf", "z",
-                                   "y", "x0", "x1"])
-        self.plot_transition_table = DataFrame(columns = ["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
-                                                     "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
-                                                     "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
-                                                     "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
+                                                  "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
+                                                  "color", "y0", "hf", "z",
+                                                  "y", "x0", "x1"])
+        self.plot_transition_table = DataFrame(columns=["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
+                                                        "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
+                                                        "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
+                                                        "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
 
     def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False, 
                     offset_position=(0.0, 0.0), color="black"):
@@ -44,23 +44,23 @@ class Grotrian:
         if not self.hf:
             x1 = x0 + width
             line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": level.level,
-                                   "J"            : [level.J], "F": [None], "m_F": [None],
-                                   "J_frac"       : [term_frac(level.J)], "F_frac": [None], "m_F_frac": [None],
-                                   "color"        : [color], "y0": [y0], "hf": [0.0], "z": [0.0],
-                                   "y"            : [y0], "x0": [x0], "x1": [x1]})
+                                   "J": [level.J], "F": [None], "m_F": [None],
+                                   "J_frac": [term_frac(level.J)], "F_frac": [None], "m_F_frac": [None],
+                                   "color": [color], "y0": [y0], "hf": [0.0], "z": [0.0],
+                                   "y": [y0], "x0": [x0], "x1": [x1]})
             table = table.append(line, ignore_index=True)
         else:
             for F in level.Fs:
                 if not self.zeeman:
                     hf = level.hf_shifts[F]
                     y = y0 + hf * scale
-                    elevel = level.hf_levels[F]
+                    e_level = level.hf_levels[F]
                     x1 = x0 + width
-                    line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": elevel,
-                                           "J"            : [level.J], "F": [F], "m_F": [None],
-                                           "J_frac"       : [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
-                                           "color"        : [color], "y0": [y0], "hf": [hf], "z": [0.0],
-                                           "y"            : [y], "x0": [x0], "x1": [x1]})
+                    line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
+                                           "J": [level.J], "F": [F], "m_F": [None],
+                                           "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
+                                           "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
+                                           "y": [y], "x0": [x0], "x1": [x1]})
                     table = table.append(line, ignore_index=True)
                 else:
                     delta = sublevel_spacing
@@ -70,15 +70,15 @@ class Grotrian:
                         z = level.z_shifts[F][m_F]
                         hf = level.hf_shifts[F]
                         y = y0 + hf*scale + z*scale
-                        elevel = level.z_levels[F][m_F]
+                        e_level = level.z_levels[F][m_F]
                         x = x0 + (m_F + F_max) * (wd + delta)
                         x1 = x + wd
                         line = DataFrame(
-                            data={"configuration": [level.configuration], "term": [level.term], "level": elevel,
-                                  "J"            : [level.J], "F": [F], "m_F": [m_F],
-                                  "J_frac"       : [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
-                                  "color"        : [color], "y0": [y0], "hf": [hf], "z": [z],
-                                  "y"            : [y], "x0": [x], "x1": [x1]})
+                            data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
+                                  "J": [level.J], "F": [F], "m_F": [m_F],
+                                  "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
+                                  "color": [color], "y0": [y0], "hf": [hf], "z": [z],
+                                  "y": [y], "x0": [x], "x1": [x1]})
                         table = table.append(line, ignore_index=True)
         return table
     
@@ -108,10 +108,10 @@ class Grotrian:
             c = 3e8
             wl = c / abs(float(freq)) * 1e9
 
-            wavelengths =   [0, 200, 280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
-            rs =            [0, 0,   0,   50,  120, 80 , 110, 0  , 40 , 40 , 255, 235, 90 , 50 , 0]
-            gs =            [0, 0,   0,   20,  120, 40 , 0  , 0  , 255, 255, 230, 30 , 30 , 20 , 0]
-            bs =            [0, 0,   0,   100, 255, 120, 255, 255, 250, 0  , 0  , 30 , 30 , 20 , 0]
+            wavelengths = [0, 200, 280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
+            rs =          [0, 0,   0,   50,  120, 80 , 110, 0  , 40 , 40 , 255, 235, 90 , 50 , 0]
+            gs =          [0, 0,   0,   20,  120, 40 , 0  , 0  , 255, 255, 230, 30 , 30 , 20 , 0]
+            bs =          [0, 0,   0,   100, 255, 120, 255, 255, 250, 0  , 0  , 30 , 30 , 20 , 0]
 
             rf = interpolate.interp1d(wavelengths, rs)
             gf = interpolate.interp1d(wavelengths, gs)
@@ -161,9 +161,9 @@ class Grotrian:
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
 
         hover_lines = models.HoverTool(tooltips=[("Term", "@term @J_frac F=@F_frac, m_F=@m_F_frac"),
-                                                       ("Level", "@level{0.000000}")], renderers=[lines])
+                                                 ("Level", "@level{0.000000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
-                                                        ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
+                                                  ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
