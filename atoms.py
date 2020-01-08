@@ -2,6 +2,7 @@ from pandas import DataFrame
 import pandas as pd
 from parsers import term_frac
 
+
 class EnergyLevel:
     # TODO: isotope shifts! Frequencies are currently off by like terahertz
     def __init__(self, df, df_index, name="term", A_coeff=0.0, B_coeff=0.0, I=0.0):
@@ -85,7 +86,7 @@ class EnergyLevel:
             line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": self.level,
                                    "J"            : [self.J], "F": [None], "m_F": [None],
                                    "J_frac"       : [term_frac(self.J)], "F_frac": [None],
-                                   "m_F_frac": [None],
+                                   "m_F_frac"     : [None],
                                    "hf"           : [0.0], "z": [0.0]})
             table = table.append(line, ignore_index=True)
         else:
@@ -152,7 +153,7 @@ class Transition:
         return data_table
 
     def get_type(self):
-        # TODO: finish this method sometime when I have time to actually fiure out what all the relevant selection rules are
+        # TODO: finish this method sometime when I have time to figure out what all the relevant selection rules are
         d_m = self.m_F_1 - self.m_F_0
         d_F = self.F_1 - self.F_0
         d_J = self.J_1 - self.J_0
