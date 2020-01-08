@@ -63,4 +63,3 @@ Yb_174.add_level(levels_174)
 
 if __name__ == "__main__":
     print four_eleven_171.name
-    print four_eleven_171.transition_table["term_0"][0]

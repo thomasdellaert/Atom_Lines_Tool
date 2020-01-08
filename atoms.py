@@ -122,10 +122,10 @@ class Transition:
         self.J_0, self.J_1 = level_0.J, level_1.J
         self.L_0, self.L_1 = level_0.L, level_1.L
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
+        self.name = level_0.term + "->" + level_1.term
 
         self.transition_table = self.data_table()
 
-        self.name = self.transition_table["term_0"][0] + "->" + self.transition_table["term_1"][0]
 
     def data_table(self):
 
@@ -213,3 +213,14 @@ class Atom:
 
     def list_transitions(self):
         return self.transitions
+
+
+if __name__ == "__main__":
+    from parsers import parse_NIST_levels
+
+    df = parse_NIST_levels("YbII_NIST_levels.csv")
+
+    S12_171 = EnergyLevel(df, 0, I=0.5, A_coeff=12.645e-3)  # 2S1/2
+    P12_171 = EnergyLevel(df, 8, I=0.5, A_coeff=2.1079e-3)  # 2P1/2
+    cycling_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
+    print cycling_171.name
