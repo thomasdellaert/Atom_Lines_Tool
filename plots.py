@@ -3,14 +3,11 @@
 # TODO: King plot
 
 
-from bokeh.io import output_file, show
+from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
 from bokeh.layouts import row, column
 from scipy import interpolate
-from pandas import DataFrame
-from parsers import term_frac
-import pandas as pd
 
 
 class Grotrian:
@@ -56,11 +53,12 @@ class Grotrian:
                     y = y0 + hf * scale
                     e_level = level.hf_levels[F]
                     x1 = x0 + width
-                    line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
-                                           "J": [level.J], "F": [F], "m_F": [None],
-                                           "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
-                                           "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
-                                           "y": [y], "x0": [x0], "x1": [x1], "name": [level.name]})
+                    line = DataFrame(
+                        data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
+                              "J": [level.J], "F": [F], "m_F": [None],
+                              "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
+                              "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
+                              "y": [y], "x0": [x0], "x1": [x1], "name": [level.name]})
                     table = table.append(line, ignore_index=True)
                 else:
                     delta = sublevel_spacing
@@ -76,7 +74,8 @@ class Grotrian:
                         line = DataFrame(
                             data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
                                   "J": [level.J], "F": [F], "m_F": [m_F],
-                                  "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
+                                  "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)],
+                                  "m_F_frac": [term_frac(m_F)],
                                   "color": [color], "y0": [y0], "hf": [hf], "z": [z],
                                   "y": [y], "x0": [x], "x1": [x1], "name": [level.name]})
                         table = table.append(line, ignore_index=True)
@@ -90,7 +89,8 @@ class Grotrian:
         line_0 = line_0.drop(["color", "J_frac", "F_frac", "m_F_frac"], axis=1)
         line_1 = line_1.drop(["color", "J_frac", "F_frac", "m_F_frac"], axis=1)
         if line_0.empty or line_1.empty:
-            raise ValueError("The selected quantum numbers don't yield a transition. Check that they exist in the specified levels")
+            raise ValueError("The selected quantum numbers don't yield a transition. "
+                             "Check that they exist in the specified levels")
         line_0.insert(9, "x", line_0["x0"]+x_off_0*(line_0["x1"]-line_0["x0"]))
         line_1.insert(9, "x", line_1["x0"]+x_off_1*(line_1["x1"]-line_1["x0"]))
         line_0.columns = [str(col) + '_0' for col in line_0.columns]
@@ -108,25 +108,22 @@ class Grotrian:
             c = 3e8
             wl = c / abs(float(freq)) * 1e9
 
-            wavelengths = [0, 200, 280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
-            rs =          [0, 0,   0,   50,  120, 80 , 110, 0  , 40 , 40 , 255, 235, 90 , 50 , 0]
-            gs =          [0, 0,   0,   20,  120, 40 , 0  , 0  , 255, 255, 230, 30 , 30 , 20 , 0]
-            bs =          [0, 0,   0,   100, 255, 120, 255, 255, 250, 0  , 0  , 30 , 30 , 20 , 0]
+            wavelengths = [
+                  280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
+            rs = [0,   50,  120, 80,  110, 0,   40,  40,  255, 235, 90,  50,   0]
+            gs = [0,   20,  120, 40,  0,   0,   255, 255, 230, 30,  30,  20,   0]
+            bs = [0,   100, 255, 120, 255, 255, 250, 0,   0,   30,  30,  20,   0]
 
             rf = interpolate.interp1d(wavelengths, rs)
             gf = interpolate.interp1d(wavelengths, gs)
             bf = interpolate.interp1d(wavelengths, bs)
 
-            if wl < 1500:
+            if 280 < wl < 1500:
                 r, g, b = rf(wl), gf(wl), bf(wl)
             else:
                 r, g, b = 0, 0, 0
 
-            R = "{:02x}".format(int(r))
-            G = "{:02x}".format(int(g))
-            B = "{:02x}".format(int(b))
-
-            return "#" + R + G + B
+            return "#{:02x}{:02x}{:02x}".format(int(r), int(g), int(b))
 
         delta_l = abs(transition_table["level_0"] - transition_table["level_1"])
         if color is None:
@@ -171,7 +168,8 @@ class Grotrian:
 
         scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
         b_field_slider = models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
-        line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider), code="""
+        line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider),
+                                        code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
@@ -188,7 +186,8 @@ class Grotrian:
                 };       
                 source.change.emit();
             """)
-        arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider), code="""
+        arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider),
+                                         code="""
                 var data = source.data;
                 var b_field = b_field.value;
                 var scale = scale.value;
@@ -225,7 +224,7 @@ class Grotrian:
 
 
 if __name__ == "__main__":
-    from atom_library import Yb_171, Yb_173, Yb_174
+    from atom_library import *
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)

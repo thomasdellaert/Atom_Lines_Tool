@@ -10,7 +10,6 @@ class EnergyLevel:
         my_row = df.iloc[df_index]
         (self.configuration, self.term, self.S, self.L, self.K,
          self.j1, self.j2, self.J, self.parity, self.level, self.lande) = my_row.values
-
         if name == "term":
             self.name = self.term + term_frac(self.J)
         elif name == "full":
@@ -25,6 +24,9 @@ class EnergyLevel:
         self.Fs = self.get_Fs()
         self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
         self.z_levels, self.z_shifts = self.get_zeeman_data()
+        self.tamper = False
+        # tag to mark whether the object has been altered since instantiation.
+        # Useful for, say, marking which levels may be using default values
 
     def get_Fs(self):
         Fs = []
@@ -83,6 +85,7 @@ class EnergyLevel:
             self.name = self.configuration + " " + self.term + term_frac(self.J)
         else:
             self.name = name
+        self.tamper = True
 
     def set_coeffs(self, A_coeff=None, B_coeff=None):
         if A_coeff is not None:
@@ -90,6 +93,7 @@ class EnergyLevel:
         if B_coeff is not None:
             self.B_coeff = B_coeff
         self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
+        self.tamper = True
 
     def data_table(self, hf=True, zeeman=True):
         table = DataFrame(columns=["configuration", "term", "level",
