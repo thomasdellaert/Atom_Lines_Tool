@@ -81,13 +81,13 @@ populate_levels(df, Yb_174_big, I=0, nlevels=30)
 # TODO: these As currently aren't being overwritten.
 Yb_171_big = Atom(name="171Yb")
 populate_levels(df, Yb_171_big, I=0.5, nlevels=30, default_A=1e-3)
-Yb_171_big.levels["2S1/2"].A_coeff = 12.642812e-3
-Yb_171_big.levels["2P*1/2"].A_coeff = 2.1079e-3
-Yb_171_big.levels["2P*3/2"].A_coeff = 0.8754e-3
-Yb_171_big.levels["2F*7/2"].A_coeff = 1.105e-3
-Yb_171_big.levels["2D3/2"].A_coeff = 0.40048e-3
-Yb_171_big.levels["2D5/2"].A_coeff = -0.01258e-3
-Yb_171_big.levels["3[3/2]*5/2"].A_coeff = 0.199e-3
+Yb_171_big.levels["2S1/2"].set_coeffs(A_coeff=12.642812e-3)
+Yb_171_big.levels["2P*1/2"].set_coeffs(A_coeff=2.1079e-3)
+Yb_171_big.levels["2P*3/2"].set_coeffs(A_coeff=0.8754e-3)
+Yb_171_big.levels["2F*7/2"].set_coeffs(A_coeff=1.105e-3)
+Yb_171_big.levels["2D3/2"].set_coeffs(A_coeff=0.40048e-3)
+Yb_171_big.levels["2D5/2"].set_coeffs(A_coeff=-0.01258e-3)
+Yb_171_big.levels["3[3/2]*5/2"].set_coeffs(A_coeff=0.199e-3)
 
 t = []
 t.append(Transition(level_0=Yb_171_big.levels["2D5/2"], F_0=2, m_F_0=0, level_1=Yb_171_big.levels["2P*3/2"], F_1=1, m_F_1=0))
@@ -98,8 +98,6 @@ Yb_171_big.add_transition(t)
 
 Yb_173_big = Atom(name="173Yb")
 populate_levels(df, Yb_173_big, I=2.5, nlevels=30)
-
-
 
 
 if __name__ == "__main__":

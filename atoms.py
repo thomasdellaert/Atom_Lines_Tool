@@ -76,13 +76,20 @@ class EnergyLevel:
                 m_F += 1
         return z_levels, z_shifts
 
-    def rename(self, name):
+    def set_name(self, name):
         if name == "term":
             self.name = self.term + term_frac(self.J)
         elif name == "full":
             self.name = self.configuration + " " + self.term + term_frac(self.J)
         else:
             self.name = name
+
+    def set_coeffs(self, A_coeff=None, B_coeff=None):
+        if A_coeff is not None:
+            self.A_coeff = A_coeff
+        if B_coeff is not None:
+            self.B_coeff = B_coeff
+        self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
 
     def data_table(self, hf=True, zeeman=True):
         table = DataFrame(columns=["configuration", "term", "level",
