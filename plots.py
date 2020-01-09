@@ -225,13 +225,13 @@ class Grotrian:
 
 
 if __name__ == "__main__":
-    from atom_library import Yb_171, Yb_173, Yb_174, Yb_171_big
+    from atom_library import Yb_171, Yb_173, Yb_174
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_171_big
+    atom = Yb_173
 
     g = Grotrian(atom)
     g.add_level(atom.levels.values())
