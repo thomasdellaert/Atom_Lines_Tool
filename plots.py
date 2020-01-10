@@ -82,6 +82,7 @@ class Grotrian:
         return table
     
     def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, scale_splitting=1.0, color=None):
+        # TODO: figure out a way to arbitrary kwargs into the table
         table_0 = self.level_table(transition.level_0, scale_splitting=scale_splitting)
         table_1 = self.level_table(transition.level_1, scale_splitting=scale_splitting)
         line_0 = table_0.loc[(table_0["m_F"] == transition.m_F_0) & (table_0["F"] == transition.F_0)]
@@ -147,7 +148,7 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table.append(self.transition_table(transition, **kwargs))
         return self.plot_transition_table
 
-    # TODO: add level(all), add transition(all), remove_level, remove_transition, level_style(), transition_style()
+    # TODO: remove_level, remove_transition, level_style(), transition_style()
 
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1e3), title=None, scale_splitting=1):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=(0, 4))
@@ -233,7 +234,14 @@ if __name__ == "__main__":
     atom = Yb_173
 
     g = Grotrian(atom)
-    g.add_level(atom.levels.values())
+    defs = atom.levels.values()
+    mods = []
+    for level in defs:
+        if level.tamper:
+            mods.append(level)
+            defs.remove(level)
+    g.add_level(defs, color="lightgray")
+    g.add_level(mods, color="black")
     g.add_transition(atom.transitions.values())
 
     g.build_figure()
