@@ -4,7 +4,7 @@ from parsers import term_frac
 
 
 class EnergyLevel:
-    # TODO: isotope shifts! Frequencies are currently off by like terahertz
+    # TODO: isotope shifts?
     def __init__(self, df, df_index, name="term", A_coeff=0.0, B_coeff=0.0, I=0.0):
         # get parameters from datafile
         my_row = df.iloc[df_index]
