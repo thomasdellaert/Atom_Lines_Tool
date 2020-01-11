@@ -53,15 +53,20 @@ Yb_171.levels["2F*7/2"].set_coeffs(A_coeff=1.105e-3)
 Yb_171.levels["2D3/2"].set_coeffs(A_coeff=0.40048e-3)
 Yb_171.levels["2D5/2"].set_coeffs(A_coeff=-0.01258e-3)
 Yb_171.levels["3[3/2]*5/2"].set_coeffs(A_coeff=0.199e-3)
+Yb_171.levels["1[3/2]*3/2"].set_coeffs(A_coeff=4.45e-3)
 
 _t = [
-    Transition(level_0=Yb_171.levels["2D5/2"], F_0=2, m_F_0=0, level_1=Yb_171.levels["2P*3/2"], F_1=1, m_F_1=0),
-    Transition(level_0=Yb_171.levels["2S1/2"], F_0=0, m_F_0=0, level_1=Yb_171.levels["2P*1/2"], F_1=1, m_F_1=0),
-    Transition(level_0=Yb_171.levels["2S1/2"], F_0=0, m_F_0=0, level_1=Yb_171.levels["2D5/2"], F_1=3, m_F_1=0),
-    Transition(level_0=Yb_171.levels["2S1/2"], F_0=0, m_F_0=0, level_1=Yb_171.levels["2D3/2"], F_1=2, m_F_1=0)]
+    Transition(level_0=Yb_171.levels["2S1/2"], F_0=1, m_F_0=0, level_1=Yb_171.levels["2P*1/2"], F_1=1, m_F_1=0),
+    Transition(level_0=Yb_171.levels["2S1/2"], F_0=1, m_F_0=0, level_1=Yb_171.levels["2D5/2"], F_1=3, m_F_1=0),
+    Transition(level_0=Yb_171.levels["3[3/2]*1/2"], F_0=0, m_F_0=0, level_1=Yb_171.levels["2D3/2"], F_1=2, m_F_1=0),
+    Transition(level_0=Yb_171.levels["2F*7/2"], F_0=4, m_F_0=0, level_1=Yb_171.levels["1[3/2]*3/2"], F_1=2, m_F_1=0),
+    Transition(level_0=Yb_171.levels["2F*7/2"], F_0=3, m_F_0=0, level_1=Yb_171.levels["1[3/2]*3/2"], F_1=1, m_F_1=0),
+    Transition(level_0=Yb_171.levels["2D5/2"], F_0=3, m_F_0=0, level_1=Yb_171.levels["2F*7/2"], F_1=3, m_F_1=0),
+    Transition(level_0=Yb_171.levels["1[3/2]*3/2"], F_0=2, m_F_0=0, level_1=Yb_171.levels["2S1/2"], F_1=1, m_F_1=0),
+    Transition(level_0=Yb_171.levels["1[3/2]*3/2"], F_0=2, m_F_0=0, level_1=Yb_171.levels["2D5/2"], F_1=3, m_F_1=0)]
 Yb_171.add_transition(_t)
 # endregion
 
 
 if __name__ == "__main__":
-    print Yb_173.levels.keys()
+    print Yb_171.levels.keys()

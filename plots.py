@@ -150,8 +150,8 @@ class Grotrian:
 
     # TODO: remove_level, remove_transition, level_style(), transition_style()
 
-    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1e3), title=None, scale_splitting=1):
-        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=(0, 4))
+    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(0, 4), title=None, scale_splitting=1):
+        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
         lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
@@ -231,15 +231,17 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_173
+    atom = Yb_171
 
     g = Grotrian(atom)
-    defs = atom.levels.values()
+    levels = atom.levels.values()
     mods = []
-    for level in defs:
-        if level.tamper:
-            mods.append(level)
-            defs.remove(level)
+    defs = []
+    for i in range(len(levels)):
+        if levels[i].tamper:
+            mods.append(levels[i])
+        else:
+            defs.append(levels[i])
     g.add_level(defs, color="lightgray")
     g.add_level(mods, color="black")
     g.add_transition(atom.transitions.values())

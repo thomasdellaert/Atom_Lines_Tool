@@ -135,7 +135,7 @@ class Transition:
         self.J_0, self.J_1 = level_0.J, level_1.J
         self.L_0, self.L_1 = level_0.L, level_1.L
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
-        self.name = level_0.name + "->" + level_1.name
+        self.name = level_0.name + str(F_0) + str(m_F_0) + "->" + level_1.name + str(F_1) + str(m_F_1)
 
         self.transition_table = self.data_table()
 
@@ -219,7 +219,6 @@ class Atom:
                 self.transitions.pop(transition.name)
         else:
             raise ValueError("Unrecognized mode")
-
 
 
 if __name__ == "__main__":
