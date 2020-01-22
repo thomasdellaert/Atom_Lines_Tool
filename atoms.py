@@ -208,8 +208,7 @@ class Atom:
                 gs = state
                 gs_level = min(gs.hf_levels.values())
         for state in self.levels.values():
-            print state
-            gs.set_level(state.level - gs_level)
+            state.set_level(state.level - gs_level)
 
     def add_level(self, levels):
         for level in levels:
