@@ -79,6 +79,7 @@ class EnergyLevel:
         return z_levels, z_shifts
 
     def set_name(self, name):
+        """Sets the name of the level. Can be 'term', 'full', or a custom name"""
         if name == "term":
             self.name = self.term + term_frac(self.J)
         elif name == "full":
@@ -86,6 +87,12 @@ class EnergyLevel:
         else:
             self.name = name
         self.tamper = True
+
+    def set_level(self, level):
+        """Sets the level of the level and recalculates all shifts"""
+        self.level = level
+        self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
+        self.z_levels, self.z_shifts = self.get_zeeman_data()
 
     def set_coeffs(self, A_coeff=None, B_coeff=None):
         if A_coeff is not None:
@@ -181,6 +188,7 @@ class Transition:
 
 class Atom:
     def __init__(self, name, levels=(), transitions=()):
+        self.name = name
         self.levels = {}
         for level in levels:
             if level.name in self.levels.keys():
@@ -190,11 +198,23 @@ class Atom:
         self.transitions = {}
         for transition in transitions:
             self.transitions[transition.name] = transition
-        self.name = name
+
+    def rezero(self):
+        """Takes the minimum hyperfine level in the atom and sets it to zero, shifting all others appropriately"""
+        gs = self.levels.values()[0]
+        gs_level = min(gs.hf_levels.values())
+        for state in self.levels.values():
+            if state.level < gs_level:
+                gs = state
+                gs_level = min(gs.hf_levels.values())
+        for state in self.levels.values():
+            print state
+            gs.set_level(state.level - gs_level)
 
     def add_level(self, levels):
         for level in levels:
             self.levels[level.name] = level
+        self.rezero()
 
     def remove_level(self, mode="keys", *levels):
         if mode == "keys":
@@ -205,6 +225,7 @@ class Atom:
                 self.levels.pop(level.name)
         else:
             raise ValueError("Unrecognized mode")
+        self.rezero()
 
     def add_transition(self, transitions):
         for transition in transitions:
