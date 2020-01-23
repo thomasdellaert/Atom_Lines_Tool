@@ -26,7 +26,8 @@ class Grotrian:
 
     def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False, 
                     offset_position=(0.0, 0.0), color="black"):
-        # TODO: Make level_table and transition_table functions take as much data as possible from the level/transition data tables, so that changes to the physics propagate properly
+        # FIXME: Make level_table and transition_table functions take as much data as possible from the
+        #   level/transition data tables, so that changes to the physics propagate properly
         table = DataFrame(columns=["configuration", "term", "level",
                                    "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
                                    "color", "y0", "hf", "z",
@@ -232,7 +233,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_171
+    atom = Yb_173
 
     g = Grotrian(atom)
     levels = atom.levels.values()
