@@ -24,62 +24,31 @@ class Grotrian:
                                                         "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
                                                         "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
 
-    def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False, 
+    def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
                     offset_position=(0.0, 0.0), color="black"):
-        # TODO: Make level_table and transition_table functions take as much data as possible from the level/transition data tables, so that changes to the physics propagate properly
-        table = DataFrame(columns=["configuration", "term", "level",
-                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                   "color", "y0", "hf", "z",
-                                   "y", "x0", "x1", "name"])
+        table = level.data_table(hf=self.hf, zeeman=self.zeeman)
+        table['color'] = color
+        table['name'] = level.name
+
         if not override_position:
             x0 = level.J + offset_position[0] - width / 2
             y0 = level.level + offset_position[1]
         else:
             x0, y0 = override_position
-            
-        scale = scale_splitting
-        
-        if not self.hf:
-            x1 = x0 + width
-            line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": level.level,
-                                   "J": [level.J], "F": [None], "m_F": [None],
-                                   "J_frac": [term_frac(level.J)], "F_frac": [None], "m_F_frac": [None],
-                                   "color": [color], "y0": [y0], "hf": [0.0], "z": [0.0],
-                                   "y": [y0], "x0": [x0], "x1": [x1], "name": [level.name]})
-            table = table.append(line, ignore_index=True)
+
+        table['y0'] = y0
+
+        if not self.zeeman:
+            table['x0'] = x0
+            table['x1'] = table['x0'] + width
+            table['y'] = table['y0'] + table['hf'] * scale_splitting
         else:
-            for F in level.Fs:
-                if not self.zeeman:
-                    hf = level.hf_shifts[F]
-                    y = y0 + hf * scale
-                    e_level = level.hf_levels[F]
-                    x1 = x0 + width
-                    line = DataFrame(
-                        data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
-                              "J": [level.J], "F": [F], "m_F": [None],
-                              "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
-                              "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
-                              "y": [y], "x0": [x0], "x1": [x1], "name": [level.name]})
-                    table = table.append(line, ignore_index=True)
-                else:
-                    delta = sublevel_spacing
-                    F_max = max(level.Fs)
-                    wd = (width - delta*2*F_max)/(2*F_max+1)
-                    for m_F in level.z_shifts[F].keys():
-                        z = level.z_shifts[F][m_F]
-                        hf = level.hf_shifts[F]
-                        y = y0 + hf*scale + z*scale
-                        e_level = level.z_levels[F][m_F]
-                        x = x0 + (m_F + F_max) * (wd + delta)
-                        x1 = x + wd
-                        line = DataFrame(
-                            data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
-                                  "J": [level.J], "F": [F], "m_F": [m_F],
-                                  "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)],
-                                  "m_F_frac": [term_frac(m_F)],
-                                  "color": [color], "y0": [y0], "hf": [hf], "z": [z],
-                                  "y": [y], "x0": [x], "x1": [x1], "name": [level.name]})
-                        table = table.append(line, ignore_index=True)
+            delta = sublevel_spacing
+            F_max = max(table['F'])
+            wd = (width - delta*2*F_max)/(2*F_max+1)
+            table['y'] = table['y0'] + table['hf'] * scale_splitting + table['z'] * scale_splitting
+            table['x0'] = x0 + (table['m_F'] + F_max) * (wd + delta)
+            table['x1'] = table['x0'] + wd
         return table
     
     def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, scale_splitting=1.0, color=None):
