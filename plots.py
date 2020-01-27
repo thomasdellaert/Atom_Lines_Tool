@@ -51,10 +51,11 @@ class Grotrian:
             table['x1'] = table['x0'] + wd
         return table
     
-    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, scale_splitting=1.0, color=None):
+    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=None):
         # TODO: figure out a way to arbitrary kwargs into the table
-        table_0 = self.level_table(transition.level_0, scale_splitting=scale_splitting)
-        table_1 = self.level_table(transition.level_1, scale_splitting=scale_splitting)
+
+        table_0 = self.level_table(transition.level_0)
+        table_1 = self.level_table(transition.level_1)
         line_0 = table_0.loc[(table_0["m_F"] == transition.m_F_0) & (table_0["F"] == transition.F_0)]
         line_1 = table_1.loc[(table_1["m_F"] == transition.m_F_1) & (table_1["F"] == transition.F_1)]
         line_0 = line_0.drop(["color", "J_frac", "F_frac", "m_F_frac"], axis=1)

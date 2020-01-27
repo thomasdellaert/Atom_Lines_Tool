@@ -198,6 +198,8 @@ class Atom:
         self.transitions = {}
         for transition in transitions:
             self.transitions[transition.name] = transition
+        if len(levels) > 0:
+            self.rezero()
 
     def rezero(self):
         """Takes the minimum hyperfine level in the atom and sets it to zero, shifting all others appropriately"""

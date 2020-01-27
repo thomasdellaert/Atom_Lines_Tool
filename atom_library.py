@@ -22,6 +22,7 @@ def _populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1)
 # region define 174Yb
 Yb_174 = Atom(name="174Yb")
 _populate_levels(df_Yb, Yb_174, I=0, n_levels=30)
+Yb_174.rezero()
 # endregion
 
 # region define 173Yb
@@ -34,6 +35,7 @@ Yb_173.levels["2F*7/2"].set_coeffs(A_coeff=-0.24e-3, B_coeff=4.762e-3)
 Yb_173.levels["2D3/2"].set_coeffs(A_coeff=-0.11031e-3, B_coeff=0.09514e-3)
 Yb_173.levels["2D5/2"].set_coeffs(A_coeff=0.00347e-3, B_coeff=1.1904e-3)
 Yb_173.levels["3[3/2]*5/2"].set_coeffs(A_coeff=-0.055e-3, B_coeff=-1.72e-3)
+Yb_173.rezero()
 
 _t = [
     Transition(level_0=Yb_173.levels["2D5/2"], F_0=4, m_F_0=0, level_1=Yb_173.levels["2P*3/2"], F_1=3, m_F_1=0),
@@ -54,6 +56,7 @@ Yb_171.levels["2D3/2"].set_coeffs(A_coeff=0.40048e-3)
 Yb_171.levels["2D5/2"].set_coeffs(A_coeff=-0.01258e-3)
 Yb_171.levels["3[3/2]*5/2"].set_coeffs(A_coeff=0.199e-3)
 Yb_171.levels["1[3/2]*3/2"].set_coeffs(A_coeff=4.45e-3)
+Yb_171.rezero()
 
 _t = [
     Transition(level_0=Yb_171.levels["2S1/2"], F_0=1, m_F_0=0, level_1=Yb_171.levels["2P*1/2"], F_1=1, m_F_1=0),
