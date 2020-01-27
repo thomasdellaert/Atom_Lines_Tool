@@ -5,9 +5,11 @@ from parsers import term_frac
 
 class EnergyLevel:
     # TODO: isotope shifts?
-    def __init__(self, df, df_index, name="term", A_coeff=0.0, B_coeff=0.0, I=0.0):
+    def __init__(self, df, df_index, name="term", I=0.0, A_coeff=0.0, B_coeff=0.0):
+        self._initialized = False
         # get parameters from datafile
         my_row = df.iloc[df_index]
+
         (self.configuration, self.term, self.S, self.L, self.K,
          self.j1, self.j2, self.J, self.parity, self.level, self.lande) = my_row.values
         if name == "term":
@@ -16,17 +18,26 @@ class EnergyLevel:
             self.name = self.configuration + " " + self.term + term_frac(self.J)
         else:
             self.name = name
-
-        self.coupling = self.get_coupling()
         self.A_coeff = A_coeff
         self.B_coeff = B_coeff
+        self.coupling = self.get_coupling()
         self.I = I
         self.Fs = self.get_Fs()
         self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
         self.z_levels, self.z_shifts = self.get_zeeman_data()
+
         self.tamper = False
+        self._initialized = True
         # tag to mark whether the object has been altered since instantiation.
         # Useful for, say, marking which levels may be using default values
+
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+        if self._initialized:
+            if key in ['level', 'lande', 'A_coeff', 'B_coeff']:
+                self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
+            if key in ['level', 'lande']:
+                self.z_levels, self.z_shifts = self.get_zeeman_data()
 
     def get_Fs(self):
         Fs = []
@@ -86,20 +97,6 @@ class EnergyLevel:
             self.name = self.configuration + " " + self.term + term_frac(self.J)
         else:
             self.name = name
-        self.tamper = True
-
-    def set_level(self, level):
-        """Sets the level of the level and recalculates all shifts"""
-        self.level = level
-        self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
-        self.z_levels, self.z_shifts = self.get_zeeman_data()
-
-    def set_coeffs(self, A_coeff=None, B_coeff=None):
-        if A_coeff is not None:
-            self.A_coeff = A_coeff
-        if B_coeff is not None:
-            self.B_coeff = B_coeff
-        self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
         self.tamper = True
 
     def data_table(self, hf=True, zeeman=True):

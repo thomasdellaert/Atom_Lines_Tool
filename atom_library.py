@@ -28,13 +28,22 @@ Yb_174.rezero()
 # region define 173Yb
 Yb_173 = Atom(name="173Yb")
 _populate_levels(df_Yb, Yb_173, I=2.5, n_levels=30, default_A=0.01e-3, default_B=0.0)
-Yb_173.levels["2S1/2"].set_coeffs(A_coeff=-3.4975e-3, B_coeff=0.0)
-Yb_173.levels["2P*1/2"].set_coeffs(A_coeff=-0.5812e-3, B_coeff=0.0)
-Yb_173.levels["2P*3/2"].set_coeffs(A_coeff=-0.245e-3, B_coeff=1.46e-3)
-Yb_173.levels["2F*7/2"].set_coeffs(A_coeff=-0.24e-3, B_coeff=4.762e-3)
-Yb_173.levels["2D3/2"].set_coeffs(A_coeff=-0.11031e-3, B_coeff=0.09514e-3)
-Yb_173.levels["2D5/2"].set_coeffs(A_coeff=0.00347e-3, B_coeff=1.1904e-3)
-Yb_173.levels["3[3/2]*5/2"].set_coeffs(A_coeff=-0.055e-3, B_coeff=-1.72e-3)
+
+Yb_173.levels["2S1/2"].A_coeff = -3.4975e-3
+Yb_173.levels["2P*1/2"].A_coeff = -0.5812e-3
+Yb_173.levels["2P*3/2"].A_coeff = -0.245e-3
+Yb_173.levels["2F*7/2"].A_coeff = -0.24e-3
+Yb_173.levels["2D3/2"].A_coeff = -0.11031e-3
+Yb_173.levels["2D5/2"].A_coeff = 0.00347e-3
+Yb_173.levels["3[3/2]*5/2"].A_coeff = -0.055e-3
+
+Yb_173.levels["2S1/2"].B_coeff = 0.0
+Yb_173.levels["2P*1/2"].B_coeff = 0.0
+Yb_173.levels["2P*3/2"].B_coeff = 1.46e-3
+Yb_173.levels["2F*7/2"].B_coeff = 4.762e-3
+Yb_173.levels["2D3/2"].B_coeff = 0.09514e-3
+Yb_173.levels["2D5/2"].B_coeff = 1.1904e-3
+Yb_173.levels["3[3/2]*5/2"].B_coeff = -1.72e-3
 Yb_173.rezero()
 
 _t = [
@@ -48,14 +57,14 @@ Yb_173.add_transition(_t)
 # region define 171Yb
 Yb_171 = Atom(name="171Yb")
 _populate_levels(df_Yb, Yb_171, I=0.5, n_levels=30, default_A=0.01e-3)
-Yb_171.levels["2S1/2"].set_coeffs(A_coeff=12.642812e-3)
-Yb_171.levels["2P*1/2"].set_coeffs(A_coeff=2.1079e-3)
-Yb_171.levels["2P*3/2"].set_coeffs(A_coeff=0.8754e-3)
-Yb_171.levels["2F*7/2"].set_coeffs(A_coeff=1.105e-3)
-Yb_171.levels["2D3/2"].set_coeffs(A_coeff=0.40048e-3)
-Yb_171.levels["2D5/2"].set_coeffs(A_coeff=-0.01258e-3)
-Yb_171.levels["3[3/2]*5/2"].set_coeffs(A_coeff=0.199e-3)
-Yb_171.levels["1[3/2]*3/2"].set_coeffs(A_coeff=4.45e-3)
+Yb_171.levels["2S1/2"].A_coeff = 12.642812e-3
+Yb_171.levels["2P*1/2"].A_coeff = 2.1079e-3
+Yb_171.levels["2P*3/2"].A_coeff = 0.8754e-3
+Yb_171.levels["2F*7/2"].A_coeff = 1.105e-3
+Yb_171.levels["2D3/2"].A_coeff = 0.40048e-3
+Yb_171.levels["2D5/2"].A_coeff = -0.01258e-3
+Yb_171.levels["3[3/2]*5/2"].A_coeff = 0.199e-3
+Yb_171.levels["1[3/2]*3/2"].A_coeff = 4.45e-3
 Yb_171.rezero()
 
 _t = [
@@ -72,4 +81,6 @@ Yb_171.add_transition(_t)
 
 
 if __name__ == "__main__":
-    print Yb_171.levels.keys()
+    print Yb_173.levels.keys()
+    for level in Yb_173.levels.values():
+        print level.A_coeff
