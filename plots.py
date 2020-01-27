@@ -7,8 +7,7 @@ from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
 from bokeh.layouts import row, column
-from scipy import interpolate
-
+from colors import default_lookup, green_uv_lookup, uv_ir_lookup, rich_ir_lookup
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -51,7 +50,7 @@ class Grotrian:
             table['x1'] = table['x0'] + wd
         return table
     
-    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=None):
+    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=default_lookup):
         # TODO: figure out a way to arbitrary kwargs into the table
 
         table_0 = self.level_table(transition.level_0)
@@ -72,38 +71,20 @@ class Grotrian:
 
         transition_table = pd.concat([line_0, line_1], axis=1, ignore_index=False)
 
-        def frequency_to_color(freq):
-            """
-            Takes a frequency (in Hertz for now) and outputs a hex color value based on the frequency
-            It does this by interpolating between set points where I know that the colors should be.
-            """
-            c = 3e8
-            wl = c / abs(float(freq)) * 1e9
-
-            wavelengths = [
-                  280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
-            rs = [0,   50,  120, 80,  110, 0,   40,  40,  255, 235, 90,  50,   0]
-            gs = [0,   20,  120, 40,  0,   0,   255, 255, 230, 30,  30,  20,   0]
-            bs = [0,   100, 255, 120, 255, 255, 250, 0,   0,   30,  30,  20,   0]
-
-            rf = interpolate.interp1d(wavelengths, rs)
-            gf = interpolate.interp1d(wavelengths, gs)
-            bf = interpolate.interp1d(wavelengths, bs)
-
-            if 280 < wl < 1500:
-                r, g, b = rf(wl), gf(wl), bf(wl)
-            else:
-                r, g, b = 0, 0, 0
-
-            return "#{:02x}{:02x}{:02x}".format(int(r), int(g), int(b))
-
         delta_l = abs(transition_table["level_0"] - transition_table["level_1"])
-        if color is None:
-            color = frequency_to_color(delta_l*1e12)
         wavelength = 299792.458/delta_l
+        if type(color) is dict:
+            wl = int(wavelength)
+            if wl < min(color.keys()):
+                wl = min(color.keys())
+            elif wl > max(color.keys()):
+                wl = max(color.keys())
+            mycolor = color[wl]
+        else:
+            mycolor = color
 
         transition_table["delta_l"] = [delta_l]
-        transition_table["color"] = [color]
+        transition_table["color"] = [mycolor]
         transition_table["wavelength"] = [wavelength]
         transition_table["name"] = [transition.name]
 
@@ -215,6 +196,6 @@ if __name__ == "__main__":
             defs.append(levels[i])
     g.add_level(defs, color="lightgray")
     g.add_level(mods, color="black")
-    g.add_transition(atom.transitions.values())
+    g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
     g.build_figure()
