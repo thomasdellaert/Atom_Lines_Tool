@@ -7,7 +7,7 @@ from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
 from bokeh.layouts import row, column
-from colors import default_lookup, green_uv_lookup, uv_ir_lookup, rich_ir_lookup
+from colors import default_lookup
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -178,6 +178,7 @@ class Grotrian:
 
 if __name__ == "__main__":
     from atom_library import *
+    from colors import uv_ir_lookup
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
