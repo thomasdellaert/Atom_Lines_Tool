@@ -7,8 +7,7 @@ from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
 from bokeh.layouts import row, column
-from scipy import interpolate
-
+from colors import default_lookup
 
 class Grotrian:
     def __init__(self, atom, hf=True, zeeman=True):
@@ -24,69 +23,38 @@ class Grotrian:
                                                         "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
                                                         "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
 
-    def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False, 
+    def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
                     offset_position=(0.0, 0.0), color="black"):
-        # FIXME: Make level_table and transition_table functions take as much data as possible from the
-        #   level/transition data tables, so that changes to the physics propagate properly
-        table = DataFrame(columns=["configuration", "term", "level",
-                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                   "color", "y0", "hf", "z",
-                                   "y", "x0", "x1", "name"])
+        table = level.data_table(hf=self.hf, zeeman=self.zeeman)
+        table['color'] = color
+        table['name'] = level.name
+
         if not override_position:
             x0 = level.J + offset_position[0] - width / 2
             y0 = level.level + offset_position[1]
         else:
             x0, y0 = override_position
-            
-        scale = scale_splitting
-        
-        if not self.hf:
-            x1 = x0 + width
-            line = DataFrame(data={"configuration": [level.configuration], "term": [level.term], "level": level.level,
-                                   "J": [level.J], "F": [None], "m_F": [None],
-                                   "J_frac": [term_frac(level.J)], "F_frac": [None], "m_F_frac": [None],
-                                   "color": [color], "y0": [y0], "hf": [0.0], "z": [0.0],
-                                   "y": [y0], "x0": [x0], "x1": [x1], "name": [level.name]})
-            table = table.append(line, ignore_index=True)
+
+        table['y0'] = y0
+
+        if not self.zeeman:
+            table['x0'] = x0
+            table['x1'] = table['x0'] + width
+            table['y'] = table['y0'] + table['hf'] * scale_splitting
         else:
-            for F in level.Fs:
-                if not self.zeeman:
-                    hf = level.hf_shifts[F]
-                    y = y0 + hf * scale
-                    e_level = level.hf_levels[F]
-                    x1 = x0 + width
-                    line = DataFrame(
-                        data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
-                              "J": [level.J], "F": [F], "m_F": [None],
-                              "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
-                              "color": [color], "y0": [y0], "hf": [hf], "z": [0.0],
-                              "y": [y], "x0": [x0], "x1": [x1], "name": [level.name]})
-                    table = table.append(line, ignore_index=True)
-                else:
-                    delta = sublevel_spacing
-                    F_max = max(level.Fs)
-                    wd = (width - delta*2*F_max)/(2*F_max+1)
-                    for m_F in level.z_shifts[F].keys():
-                        z = level.z_shifts[F][m_F]
-                        hf = level.hf_shifts[F]
-                        y = y0 + hf*scale + z*scale
-                        e_level = level.z_levels[F][m_F]
-                        x = x0 + (m_F + F_max) * (wd + delta)
-                        x1 = x + wd
-                        line = DataFrame(
-                            data={"configuration": [level.configuration], "term": [level.term], "level": e_level,
-                                  "J": [level.J], "F": [F], "m_F": [m_F],
-                                  "J_frac": [term_frac(level.J)], "F_frac": [term_frac(F)],
-                                  "m_F_frac": [term_frac(m_F)],
-                                  "color": [color], "y0": [y0], "hf": [hf], "z": [z],
-                                  "y": [y], "x0": [x], "x1": [x1], "name": [level.name]})
-                        table = table.append(line, ignore_index=True)
+            delta = sublevel_spacing
+            F_max = max(table['F'])
+            wd = (width - delta*2*F_max)/(2*F_max+1)
+            table['y'] = table['y0'] + table['hf'] * scale_splitting + table['z'] * scale_splitting
+            table['x0'] = x0 + (table['m_F'] + F_max) * (wd + delta)
+            table['x1'] = table['x0'] + wd
         return table
     
-    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, scale_splitting=1.0, color=None):
+    def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=default_lookup):
         # TODO: figure out a way to arbitrary kwargs into the table
-        table_0 = self.level_table(transition.level_0, scale_splitting=scale_splitting)
-        table_1 = self.level_table(transition.level_1, scale_splitting=scale_splitting)
+
+        table_0 = self.level_table(transition.level_0)
+        table_1 = self.level_table(transition.level_1)
         line_0 = table_0.loc[(table_0["m_F"] == transition.m_F_0) & (table_0["F"] == transition.F_0)]
         line_1 = table_1.loc[(table_1["m_F"] == transition.m_F_1) & (table_1["F"] == transition.F_1)]
         line_0 = line_0.drop(["color", "J_frac", "F_frac", "m_F_frac"], axis=1)
@@ -103,38 +71,20 @@ class Grotrian:
 
         transition_table = pd.concat([line_0, line_1], axis=1, ignore_index=False)
 
-        def frequency_to_color(freq):
-            """
-            Takes a frequency (in Hertz for now) and outputs a hex color value based on the frequency
-            It does this by interpolating between set points where I know that the colors should be.
-            """
-            c = 3e8
-            wl = c / abs(float(freq)) * 1e9
-
-            wavelengths = [
-                  280, 300, 350, 400, 445, 475, 493, 510, 570, 650, 780, 1000, 1500]
-            rs = [0,   50,  120, 80,  110, 0,   40,  40,  255, 235, 90,  50,   0]
-            gs = [0,   20,  120, 40,  0,   0,   255, 255, 230, 30,  30,  20,   0]
-            bs = [0,   100, 255, 120, 255, 255, 250, 0,   0,   30,  30,  20,   0]
-
-            rf = interpolate.interp1d(wavelengths, rs)
-            gf = interpolate.interp1d(wavelengths, gs)
-            bf = interpolate.interp1d(wavelengths, bs)
-
-            if 280 < wl < 1500:
-                r, g, b = rf(wl), gf(wl), bf(wl)
-            else:
-                r, g, b = 0, 0, 0
-
-            return "#{:02x}{:02x}{:02x}".format(int(r), int(g), int(b))
-
         delta_l = abs(transition_table["level_0"] - transition_table["level_1"])
-        if color is None:
-            color = frequency_to_color(delta_l*1e12)
         wavelength = 299792.458/delta_l
+        if type(color) is dict:
+            wl = int(wavelength)
+            if wl < min(color.keys()):
+                wl = min(color.keys())
+            elif wl > max(color.keys()):
+                wl = max(color.keys())
+            mycolor = color[wl]
+        else:
+            mycolor = color
 
         transition_table["delta_l"] = [delta_l]
-        transition_table["color"] = [color]
+        transition_table["color"] = [mycolor]
         transition_table["wavelength"] = [wavelength]
         transition_table["name"] = [transition.name]
 
@@ -228,12 +178,13 @@ class Grotrian:
 
 if __name__ == "__main__":
     from atom_library import *
+    from colors import uv_ir_lookup
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_173
+    atom = Yb_171
 
     g = Grotrian(atom)
     levels = atom.levels.values()
@@ -246,6 +197,6 @@ if __name__ == "__main__":
             defs.append(levels[i])
     g.add_level(defs, color="lightgray")
     g.add_level(mods, color="black")
-    g.add_transition(atom.transitions.values())
+    g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
     g.build_figure()
