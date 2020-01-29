@@ -3,7 +3,6 @@ import numpy as np
 
 # TODO: Potentially make it possible to parse the ADS lines form to get transitions. Useless for Yb II for some reason
 # TODO: Reconcile DREAM and NIST data
-# TODO: Given a line, the parser should be able to distinguish E1, M1, E2, M2 etc...
 def fraction_to_float(frac):
     if "/" in frac:
         return float(frac.split("/")[0]) / float(frac.split("/")[1])

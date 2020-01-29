@@ -51,8 +51,6 @@ class Grotrian:
         return table
     
     def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=default_lookup):
-        # TODO: figure out a way to arbitrary kwargs into the table
-
         table_0 = self.level_table(transition.level_0)
         table_1 = self.level_table(transition.level_1)
         line_0 = table_0.loc[(table_0["m_F"] == transition.m_F_0) & (table_0["F"] == transition.F_0)]
@@ -100,9 +98,16 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table.append(self.transition_table(transition, **kwargs))
         return self.plot_transition_table
 
-    # TODO: remove_level, remove_transition, level_style(), transition_style()
+    def remove_level(self, level_names):
+        for name in level_names:
+            self.plot_line_table = self.plot_line_table[self.plot_line_table.name == name]
 
-    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(0, 4), title=None, scale_splitting=1):
+    def remove_transition(self, transition_names):
+        for name in transition_names:
+            self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
+
+    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(0, 4), title=None, scale_splitting=1,
+                     display=False):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -171,7 +176,8 @@ class Grotrian:
         b_field_slider.js_on_change('value', line_callback)
         b_field_slider.js_on_change('value', arrow_callback)
 
-        show(row(p, column(scale_slider, b_field_slider)))
+        if display:
+            show(row(p, column(scale_slider, b_field_slider)))
 
         return row(p, column(scale_slider, b_field_slider))
 
@@ -199,4 +205,4 @@ if __name__ == "__main__":
     g.add_level(mods, color="black")
     g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
-    g.build_figure()
+    g.build_figure(display=True)
