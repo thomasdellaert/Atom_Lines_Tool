@@ -26,8 +26,8 @@ class Grotrian:
                                                         "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
 
     def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
-                    offset_position=(0.0, 0.0), color="black"):
-        table = level.data_table(hf=self.hf, zeeman=self.zeeman)
+                    offset_position=(0.0, 0.0), color="black", zeeman=True, hf=True):
+        table = level.data_table(hf=hf, zeeman=zeeman)
         table['color'] = color
         table['name'] = level.name
 
@@ -65,7 +65,7 @@ class Grotrian:
 
         table['tlabel'] = ""
         table.loc[[0], 'tlabel'] = table['term']
-        table['tlx'] = table['x0']-0.5
+        table['tlx'] = x0-0.5
         table['tly'] = (max(table['y']) + min(table['y'])) / 2
 
         return table
@@ -127,26 +127,34 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
 
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting=1,
-                     labels="", display=False):
+                     labels=[], display=False):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
+        print "plotting levels"
         lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
                           color="color", source=line_source)
+        print "plotting transitions"
         arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
+
+        if labels is not []:
+            print "drawing labels"
         if "hf" in labels:
+            print "  hf labels"
             hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source)
             p.add_layout(hflabels)
-        if "zeeman" in labels and self.zeeman:
+        if "zeeman" in labels:
+            print "  zeeman labels"
             zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source)
             p.add_layout(zlabels)
         if "term" in labels:
-            if "config" in labels:
-                tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source)
-                p.add_layout(tlabels)
+            print "  term labels"
+            tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", text_align='right', source=line_source)
+            p.add_layout(tlabels)
 
+        print "applying hovertext"
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
@@ -209,6 +217,7 @@ class Grotrian:
         b_field_slider.js_on_change('value', arrow_callback)
 
         if display:
+            print "displaying Grotrian diagram"
             show(row(p, column(scale_slider, b_field_slider)))
 
         return row(p, column(scale_slider, b_field_slider))
@@ -226,15 +235,7 @@ if __name__ == "__main__":
 
     g = Grotrian(atom)
     levels = atom.levels.values()
-    mods = []
-    defs = []
-    for i in range(len(levels)):
-        if levels[i].tamper:
-            mods.append(levels[i])
-        else:
-            defs.append(levels[i])
-    g.add_level(defs, color="lightgray")
-    g.add_level(mods, color="black")
+    g.add_level(levels, color="black")
     g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
     g.build_figure(display=True)

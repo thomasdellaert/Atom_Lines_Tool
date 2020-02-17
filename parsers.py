@@ -57,6 +57,7 @@ def parse_NIST_levels(path):
 
     Columns the parser outputs:      Configuration, Term, Level (THz), Lande, j2, j1, K, L, S, Parity
     """
+    print "parsing file {} from NIST".format(path)
     df = read_csv(path)
     df = df.iloc[:250]
 
@@ -106,6 +107,7 @@ def parse_DREAM_lines(path):
     This can be done pretty quickly using the excel data workup tools.
     Columns the parser wants to see: Wavelength, LL, LL Parity, LL J, UL, UL Parity, UL J, log gf, gA, CF
     """
+    print "parsing file {} from DREAM".format(path)
     df = read_csv(path)
 
     df["g"] = 2*df["LL_J"] + 1
