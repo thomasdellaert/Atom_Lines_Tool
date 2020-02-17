@@ -127,7 +127,7 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
 
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting=1,
-                     labels="hf", display=False):
+                     labels="", display=False):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -142,9 +142,11 @@ class Grotrian:
             p.add_layout(hflabels)
         if "zeeman" in labels and self.zeeman:
             zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source)
+            p.add_layout(zlabels)
         if "term" in labels:
             if "config" in labels:
-                tlabels
+                tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", line_source)
+                p.add_layout(tlabels)
 
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000000}")], renderers=[lines])
