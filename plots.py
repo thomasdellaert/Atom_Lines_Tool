@@ -136,7 +136,6 @@ class Grotrian:
         arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
-        # TODO: Labels!
         if "hf" in labels:
             hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source)
             p.add_layout(hflabels)
@@ -145,7 +144,7 @@ class Grotrian:
             p.add_layout(zlabels)
         if "term" in labels:
             if "config" in labels:
-                tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", line_source)
+                tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source)
                 p.add_layout(tlabels)
 
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
