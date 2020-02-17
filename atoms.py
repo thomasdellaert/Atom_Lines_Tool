@@ -26,10 +26,7 @@ class EnergyLevel:
         self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
         self.z_levels, self.z_shifts = self.get_zeeman_data()
 
-        self.tamper = False
         self._initialized = True
-        # tag to mark whether the object has been altered since instantiation.
-        # Useful for, say, marking which levels may be using default values
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value
@@ -97,7 +94,6 @@ class EnergyLevel:
             self.name = self.configuration + " " + self.term + term_frac(self.J)
         else:
             self.name = name
-        self.tamper = True
 
     def data_table(self, hf=True, zeeman=True):
         table = DataFrame(columns=["configuration", "term", "level",
