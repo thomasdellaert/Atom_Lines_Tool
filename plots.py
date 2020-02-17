@@ -1,6 +1,5 @@
 # TODO: Horizontal line plot given two levels (like in page 92 of Foot, or like in Barends/Maleki)
 # TODO: Lorentzian plot
-# TODO: King plot
 
 
 from bokeh.io import show
@@ -17,7 +16,10 @@ class Grotrian:
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
                                                   "color", "y0", "hf", "z",
-                                                  "y", "x0", "x1"])
+                                                  "y", "x0", "x1",
+                                                  "hflabel", "hflx", "hfly",
+                                                  "zlabel", "zlx", "zly",
+                                                  "tlx", "tly"])
         self.plot_transition_table = DataFrame(columns=["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
                                                         "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
                                                         "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
@@ -41,6 +43,9 @@ class Grotrian:
             table['x0'] = x0
             table['x1'] = table['x0'] + width
             table['y'] = table['y0'] + table['hf'] * scale_splitting
+            table['hflabel'] = "F="+str(table["F"])
+            table['hflx'] = table['x1']+0.05
+            table['hfly'] = table['y']
         else:
             delta = sublevel_spacing
             F_max = max(table['F'])
@@ -48,6 +53,21 @@ class Grotrian:
             table['y'] = table['y0'] + table['hf'] * scale_splitting + table['z'] * scale_splitting
             table['x0'] = x0 + (table['m_F'] + F_max) * (wd + delta)
             table['x1'] = table['x0'] + wd
+
+            table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
+            table.loc[table['m_F'] != 0, 'hflabel'] = ""
+            table['hflx'] = x0+width+0.05
+            table['hfly'] = table['y']
+
+            table['zlabel'] = table['m_F_frac']
+            table['zlx'] = table['x0']
+            table['zly'] = table['y']
+
+        table['tlabel'] = ""
+        table.loc[[0], 'tlabel'] = table['term']
+        table['tlx'] = table['x0']-0.5
+        table['tly'] = (max(table['y']) + min(table['y'])) / 2
+
         return table
     
     def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=default_lookup):
@@ -106,8 +126,8 @@ class Grotrian:
         for name in transition_names:
             self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
 
-    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(0, 4), title=None, scale_splitting=1,
-                     display=False):
+    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting=1,
+                     labels="hf", display=False):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -116,6 +136,15 @@ class Grotrian:
         arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
+        # TODO: Labels!
+        if "hf" in labels:
+            hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source)
+            p.add_layout(hflabels)
+        if "zeeman" in labels and self.zeeman:
+            zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source)
+        if "term" in labels:
+            if "config" in labels:
+                tlabels
 
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000000}")], renderers=[lines])
@@ -136,10 +165,12 @@ class Grotrian:
                 z = data['z'];
                 y = data['y'];
                 y0 = data['y0'];
+                hfly = data['hfly'];
                 level = data['level'];
 
                 for (i=0; i < y.length; i++) {
                     y[i] = hf[i]*scale + z[i]*b_field*scale + y0[i];
+                    hfly[i] = y[i]
                     level[i] = y0[i] + hf[i] + z[i]*b_field;
                 };       
                 source.change.emit();
