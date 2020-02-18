@@ -9,9 +9,7 @@ from bokeh.layouts import row, column
 from colors import default_lookup
 
 class Grotrian:
-    def __init__(self, atom, hf=True, zeeman=True):
-        self.hf = hf
-        self.zeeman = zeeman
+    def __init__(self, atom):
         self.atom = atom
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
@@ -39,7 +37,7 @@ class Grotrian:
 
         table['y0'] = y0
 
-        if not self.zeeman:
+        if not zeeman:
             table['x0'] = x0
             table['x1'] = table['x0'] + width
             table['y'] = table['y0'] + table['hf'] * scale_splitting
@@ -137,7 +135,7 @@ class Grotrian:
         print "plotting transitions"
         arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
                            color="color", line_width=3, source=arrow_source)
-        # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth
+        # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth. Bokeh arrows are insufficient.
 
         if labels is not []:
             print "drawing labels"
@@ -166,6 +164,7 @@ class Grotrian:
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
+        print "applying sliders"
         scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
         b_field_slider = models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider),
