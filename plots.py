@@ -226,6 +226,20 @@ class Grotrian:
         return row(p, column(scale_slider, b_field_slider))
 
 
+class HF_plot:
+    def __init__(self, level):
+        self.level = level
+        self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
+                                                  "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
+                                                  "color", "y0", "hf", "z",
+                                                  "y", "x0", "x1"])
+        self.plot_transition_table = DataFrame(columns=["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
+                                                        "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
+                                                        "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
+                                                        "x1_1", "y_1", "y0_1", "z_1", "delta_l", "wavelength"])
+
+    # TODO: make the HF plot
+
 if __name__ == "__main__":
     from atom_library import *
     from colors import uv_ir_lookup
