@@ -64,8 +64,8 @@ class Grotrian:
             table['zly'] = table['y']
 
         table['tlabel'] = ""
-        table.loc[[0], 'tlabel'] = table['term']
-        table['tlx'] = x0-0.5
+        table.loc[[0], 'tlabel'] = table['term'] + table['J_frac']
+        table['tlx'] = x0
         table['tly'] = (max(table['y']) + min(table['y'])) / 2
 
         return table
@@ -143,15 +143,19 @@ class Grotrian:
             print "drawing labels"
         if "hf" in labels:
             print "  hf labels"
-            hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source)
+            hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
+                                       text_baseline='middle', text_font_size="10pt")
             p.add_layout(hflabels)
         if "zeeman" in labels:
             print "  zeeman labels"
-            zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source)
+            zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
+                                      text_font_size="8pt")
             p.add_layout(zlabels)
         if "term" in labels:
             print "  term labels"
-            tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", text_align='right', source=line_source)
+            tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
+                                      text_align='right', text_font_style="bold", text_font_size="12pt",
+                                      text_baseline="middle")
             p.add_layout(tlabels)
 
         print "applying hovertext"
@@ -238,4 +242,4 @@ if __name__ == "__main__":
     g.add_level(levels, color="black")
     g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
-    g.build_figure(display=True)
+    g.build_figure(display=True, labels=["hf", "zeeman", "term"])
