@@ -59,11 +59,17 @@ class EnergyLevel:
         if self.I == 0:
             hf_levels[self.J] = self.level
             hf_shifts[self.J] = 0
+        elif self.I <= 1:
+            for F in self.Fs:
+                K1 = (F * (F + 1) - self.I * (self.I + 1) - self.J * (self.J + 1))
+                shift = (self.A_coeff * K1 / 2)
+                hf_shifts[F] = shift
+                hf_levels[F] = shift + self.level
         else:
             for F in self.Fs:
                 K1 = (F * (F + 1) - self.I * (self.I + 1) - self.J * (self.J + 1))
-                K2 = (3*K1*(K1+1)/2 - 2*self.J*(self.J+1)*self.I*(self.I+1))/(
-                        self.J*(2*self.J-1)*self.I*(2*self.I-1))
+                K2 = (3 * K1 * (K1 + 1) / 2 - 2 * self.J * (self.J + 1) * self.I * (self.I + 1)) / (
+                        self.J * (2 * self.J - 1) * self.I * (2 * self.I - 1))
                 shift = (self.A_coeff * K1 / 2) + (self.B_coeff * K2 / 4)
                 hf_shifts[F] = shift
                 hf_levels[F] = shift + self.level
