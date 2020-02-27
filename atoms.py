@@ -5,7 +5,7 @@ from parsers import term_frac
 
 class EnergyLevel:
     # TODO: isotope shifts?
-    def __init__(self, df, df_index, name="term", I=0.0, A_coeff=0.0, B_coeff=0.0):
+    def __init__(self, df, df_index, name="term", I=0.0, A_coeff=0.0, B_coeff=0.0, C_coeff=0.0):
         self._initialized = False
         # get parameters from datafile
         my_row = df.iloc[df_index]
@@ -20,6 +20,7 @@ class EnergyLevel:
             self.name = name
         self.A_coeff = A_coeff
         self.B_coeff = B_coeff
+        self.C_coeff = C_coeff
         self.coupling = self.get_coupling()
         self.I = I
         self.Fs = self.get_Fs()
@@ -31,7 +32,7 @@ class EnergyLevel:
     def __setattr__(self, key, value):
         self.__dict__[key] = value
         if self._initialized:
-            if key in ['level', 'lande', 'A_coeff', 'B_coeff']:
+            if key in ['level', 'lande', 'A_coeff', 'B_coeff', 'C_coeff']:
                 self.hf_levels, self.hf_shifts = self.get_hyperfine_data()
             if key in ['level', 'lande']:
                 self.z_levels, self.z_shifts = self.get_zeeman_data()
@@ -63,12 +64,21 @@ class EnergyLevel:
         else:
             for F in self.Fs:
                 IdotJ = 0.5 * (F*(F + 1) - J*(J + 1) - I*(I + 1))
+
                 FM1 = IdotJ
+
                 if J <= 0.5 or I <= 0.5:
                     FE2 = 0
                 else:
                     FE2 = (3*IdotJ**2 + 1.5*IdotJ - I*(I+1)*J*(J+1))/(2.0*I*(2.0*I-1.0)*J*(2.0*J-1.0))
-                shift = self.A_coeff * FM1 + self.B_coeff * FE2
+
+                if J <= 1 or I <=1:
+                    FM3 = 0
+                else:
+                    FM3 = (10*IdotJ**3 + 20*IdotJ**2 + 2*IdotJ*(-3*I*(I+1)*J*(J+1)+I*(I+1)+J*(J+1)+3)
+                           - 5*I*(I+1)*J*(J+1))/(I*(I-1)*J*(J-1)*(2*J-1))
+
+                shift = self.A_coeff*FM1 + self.B_coeff*FE2 + self.C_coeff*FM3
                 hf_shifts[F] = shift
                 hf_levels[F] = shift + self.level
         return hf_levels, hf_shifts
