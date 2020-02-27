@@ -56,21 +56,19 @@ class EnergyLevel:
     def get_hyperfine_data(self):
         hf_levels = {}
         hf_shifts = {}
-        if self.I == 0:
-            hf_levels[self.J] = self.level
-            hf_shifts[self.J] = 0
-        elif self.I <= 1:
-            for F in self.Fs:
-                K1 = (F * (F + 1) - self.I * (self.I + 1) - self.J * (self.J + 1))
-                shift = (self.A_coeff * K1 / 2)
-                hf_shifts[F] = shift
-                hf_levels[F] = shift + self.level
+        I, J = self.I, self.J
+        if I == 0:
+            hf_levels[J] = self.level
+            hf_shifts[J] = 0
         else:
             for F in self.Fs:
-                K1 = (F * (F + 1) - self.I * (self.I + 1) - self.J * (self.J + 1))
-                K2 = (3 * K1 * (K1 + 1) / 2 - 2 * self.J * (self.J + 1) * self.I * (self.I + 1)) / (
-                        self.J * (2 * self.J - 1) * self.I * (2 * self.I - 1))
-                shift = (self.A_coeff * K1 / 2) + (self.B_coeff * K2 / 4)
+                IdotJ = 0.5 * (F*(F + 1) - J*(J + 1) - I*(I + 1))
+                FM1 = IdotJ
+                if J <= 0.5 or I <= 0.5:
+                    FE2 = 0
+                else:
+                    FE2 = (3*IdotJ**2 + 1.5*IdotJ - I*(I+1)*J*(J+1))/(2.0*I*(2.0*I-1.0)*J*(2.0*J-1.0))
+                shift = self.A_coeff * FM1 + self.B_coeff * FE2
                 hf_shifts[F] = shift
                 hf_levels[F] = shift + self.level
         return hf_levels, hf_shifts
