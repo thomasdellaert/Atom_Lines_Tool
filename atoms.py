@@ -63,6 +63,7 @@ class EnergyLevel:
             hf_shifts[J] = 0
         else:
             for F in self.Fs:
+                #  The code here follows the results on page 14 of Matthew Hoffman's thesis
                 IdotJ = 0.5 * (F*(F + 1) - J*(J + 1) - I*(I + 1))
 
                 FM1 = IdotJ
