@@ -233,23 +233,20 @@ class HF_plot:
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
                                                   "color", "y0", "hf", "z",
                                                   "y", "x0", "x1"])
-        self.plot_transition_table = DataFrame(columns=["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
-                                                        "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
-                                                        "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
-                                                        "x1_1", "y_1", "y0_1", "z_1", "delta_l", "wavelength"])
+        self.plot_arrow_table = DataFrame(columns=["F_0", "hf_0", "level_0", "m_F_0", "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0",
+                                                   "F_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1", "x1_1", "y_1", "y0_1", "z_1",
+                                                   "delta_l", "wavelength"])
         self.plot_line_table = self.level_table(level)
+        self.plot_arrow_table = self.arrow_table(self.plot_line_table)
 
     def level_table(self, level, width=1.0, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", zeeman=True, hf=True):
         table = level.data_table(hf=hf, zeeman=zeeman)
         table['color'] = color
         table['name'] = level.name
 
-        x0 = 0
-        y0 = 0
-
         table['y0'] = 0
         table['x0'] = 0
-        table['x1'] = table['x0'] + width
+        table['x1'] = width
 
         if not zeeman:
 
@@ -262,7 +259,7 @@ class HF_plot:
 
             table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
             table.loc[table['m_F'] != 0, 'hflabel'] = ""
-            table['hflx'] = 0+width+0.05
+            table['hflx'] = width+0.05
             table['hfly'] = table['y']
 
             table['zlabel'] = table['m_F_frac']
@@ -271,22 +268,39 @@ class HF_plot:
 
         table['tlabel'] = ""
         table.loc[[0], 'tlabel'] = table['term'] + table['J_frac']
-        table['tlx'] = x0
+        table['tlx'] = table['x0']
         table['tly'] = (max(table['y']) + min(table['y'])) / 2
 
         return table
 
+    def arrow_table(self, level_table):
+        table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
+                                   "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
+                                   "delta_l"])
+        for index0, sublevel0 in level_table.iterrows():
+            for index1, sublevel1 in level_table.iterrows():
+                m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
+                if abs(m_F_0-m_F_1) == 1 and F_0 != F_1 and index0 < index1:
+                    line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0], 'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
+                                           'F_1': [F_1], 'hf_0': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
+                                           'delta_l': abs(sublevel0['y']-sublevel1['y'])})
+                    table = table.append(line, ignore_index=True)
+
+        return table
+
+
     # TODO: make the HF plot
-    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+    def build_figure(self, dimensions=(800, 1000), y_range=(-4e-2, 4e-2), x_range=(-0.5, 1.5), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
-        # arrow_source = ColumnDataSource(self.plot_transition_table)
+        arrow_source = ColumnDataSource(self.plot_arrow_table)
         print "plotting levels"
         lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
                           color="color", source=line_source)
-        # print "plotting transitions"
-        # arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
-        #                    color="color", line_width=3, source=arrow_source)
+        print "plotting transitions"
+        arrows = p.segment(x0="delta_l", y0="y_0", x1="delta_l", y1="y_1",
+                           line_width=3, source=arrow_source)
+
         # if labels is not []:
         #     print "drawing labels"
         # if "hf" in labels:
@@ -309,10 +323,9 @@ class HF_plot:
         print "applying hovertext"
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000 000 000}")], renderers=[lines])
-        # hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
-        #                                           ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
+        hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz")], renderers=[arrows])
         p.add_tools(hover_lines)
-        # p.add_tools(hover_arrows)
+        p.add_tools(hover_arrows)
 
         print "applying sliders"
         scale_hf_slider = models.Slider(start=1, end=100, value=scale_splitting_hf, step=1, title="HF Scaling")
@@ -339,38 +352,37 @@ class HF_plot:
                        };       
                        source.change.emit();
                    """)
-        # arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider),
-        #                                  code="""
-        #                var data = source.data;
-        #                var b_field = b_field.value;
-        #                var scale = scale.value;
-        #
-        #                hf0 = data['hf_0'];
-        #                hf1 = data['hf_1'];
-        #                z0 = data['z_0'];
-        #                z1 = data['z_1'];
-        #                y0 = data['y_0'];
-        #                y1 = data['y_1'];
-        #                y01 = data['y0_1'];
-        #                y00 = data['y0_0'];
-        #                level0 = data['level_0'];
-        #                level1 = data['level_1'];
-        #                delta_l = data['delta_l'];
-        #
-        #                for (i=0; i < y0.length; i++) {
-        #                    y0[i] = hf0[i]*scale + z0[i]*b_field*scale + y00[i];
-        #                    y1[i] = hf1[i]*scale + z1[i]*b_field*scale + y01[i];
-        #                    level0[i] = y00[i] + hf0[i] + z0[i]*b_field;
-        #                    level1[i] = y01[i] + hf1[i] + z1[i]*b_field;
-        #                    delta_l[i] = level1[i] - level0[i]
-        #                };
-        #                source.change.emit();
-        #            """)
+        arrow_callback = models.CustomJS(args=dict(source=arrow_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+                                         code="""
+                       var data = source.data;
+                       var b_field = b_field.value;
+                       var hf_scale = hf_scale.value;
+                       var z_scale = z_scale.value;
+
+                       hf0 = data['hf_0'];
+                       hf1 = data['hf_1'];
+                       z0 = data['z_0'];
+                       z1 = data['z_1'];
+                       y0 = data['y_0'];
+                       y1 = data['y_1'];
+                       y01 = data['y0_1'];
+                       y00 = data['y0_0'];
+                       delta_l = data['delta_l'];
+
+                       for (i=0; i < y0.length; i++) {
+                           y0[i] = hf0[i]*hf_scale + z0[i]*b_field*z_scale + y00[i];
+                           # y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
+                           # delta_l[i] = y1[i] - y0[i];
+                       };
+                       source.change.emit();
+                   """)
         scale_hf_slider.js_on_change('value', line_callback)
         scale_z_slider.js_on_change('value', line_callback)
-        # scale_slider.js_on_change('value', arrow_callback)
         b_field_slider.js_on_change('value', line_callback)
-        # b_field_slider.js_on_change('value', arrow_callback)
+
+        scale_hf_slider.js_on_change('value', arrow_callback)
+        scale_z_slider.js_on_change('value', arrow_callback)
+        b_field_slider.js_on_change('value', arrow_callback)
 
         if display:
             print "displaying Hyperfine diagram"
