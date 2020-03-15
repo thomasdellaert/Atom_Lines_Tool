@@ -158,7 +158,7 @@ class Grotrian:
 
         print "applying hovertext"
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
-                                                 ("Level", "@level{0.000000}")], renderers=[lines])
+                                                 ("Level", "@level{0.000 000 000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
                                                   ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
         p.add_tools(hover_lines)
@@ -166,7 +166,7 @@ class Grotrian:
 
         print "applying sliders"
         scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
-        b_field_slider = models.Slider(start=0, end=100, value=5, step=0.01, title="B-field (G)")
+        b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider),
                                         code="""
                 var data = source.data;
@@ -237,8 +237,149 @@ class HF_plot:
                                                         "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
                                                         "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
                                                         "x1_1", "y_1", "y0_1", "z_1", "delta_l", "wavelength"])
+        self.plot_line_table = self.level_table(level)
+
+    def level_table(self, level, width=1.0, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", zeeman=True, hf=True):
+        table = level.data_table(hf=hf, zeeman=zeeman)
+        table['color'] = color
+        table['name'] = level.name
+
+        x0 = 0
+        y0 = 0
+
+        table['y0'] = 0
+        table['x0'] = 0
+        table['x1'] = table['x0'] + width
+
+        if not zeeman:
+
+            table['y'] = table['y0'] + table['hf'] * scale_splitting_hf
+            table['hflabel'] = "F="+str(table["F"])
+            table['hflx'] = table['x1']+0.05
+            table['hfly'] = table['y']
+        else:
+            table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
+
+            table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
+            table.loc[table['m_F'] != 0, 'hflabel'] = ""
+            table['hflx'] = 0+width+0.05
+            table['hfly'] = table['y']
+
+            table['zlabel'] = table['m_F_frac']
+            table['zlx'] = table['x0']
+            table['zly'] = table['y']
+
+        table['tlabel'] = ""
+        table.loc[[0], 'tlabel'] = table['term'] + table['J_frac']
+        table['tlx'] = x0
+        table['tly'] = (max(table['y']) + min(table['y'])) / 2
+
+        return table
 
     # TODO: make the HF plot
+    def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
+        line_source = ColumnDataSource(self.plot_line_table)
+        # arrow_source = ColumnDataSource(self.plot_transition_table)
+        print "plotting levels"
+        lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
+                          color="color", source=line_source)
+        # print "plotting transitions"
+        # arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
+        #                    color="color", line_width=3, source=arrow_source)
+        # if labels is not []:
+        #     print "drawing labels"
+        # if "hf" in labels:
+        #     print "  hf labels"
+        #     hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
+        #                                text_baseline='middle', text_font_size="10pt")
+        #     p.add_layout(hflabels)
+        # if "zeeman" in labels:
+        #     print "  zeeman labels"
+        #     zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
+        #                               text_font_size="8pt")
+        #     p.add_layout(zlabels)
+        # if "term" in labels:
+        #     print "  term labels"
+        #     tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
+        #                               text_align='right', text_font_style="bold", text_font_size="12pt",
+        #                               text_baseline="middle")
+        #     p.add_layout(tlabels)
+
+        print "applying hovertext"
+        hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
+                                                 ("Level", "@level{0.000 000 000}")], renderers=[lines])
+        # hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
+        #                                           ("Wavelength", "@wavelength{0.00} nm")], renderers=[arrows])
+        p.add_tools(hover_lines)
+        # p.add_tools(hover_arrows)
+
+        print "applying sliders"
+        scale_hf_slider = models.Slider(start=1, end=10000, value=scale_splitting_hf, step=10, title="HF Scaling")
+        scale_z_slider = models.Slider(start=1, end=10000, value=scale_splitting_z, step=10, title="Zeeman Scaling")
+        b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
+        line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+                                        code="""
+                       var data = source.data;
+                       var b_field = b_field.value;
+                       var hf_scale = hf_scale.value;
+                       var z_scale = z_scale.value
+
+                       hf = data['hf'];
+                       z = data['z'];
+                       y = data['y'];
+                       y0 = data['y0'];
+                       hfly = data['hfly'];
+                       level = data['level'];
+
+                       for (i=0; i < y.length; i++) {
+                           y[i] = hf[i]*hf_scale + z[i]*b_field*z_scale + y0[i];
+                           hfly[i] = y[i]
+                           level[i] = y0[i] + hf[i] + z[i]*b_field;
+                       };       
+                       source.change.emit();
+                   """)
+        # arrow_callback = models.CustomJS(args=dict(source=arrow_source, scale=scale_slider, b_field=b_field_slider),
+        #                                  code="""
+        #                var data = source.data;
+        #                var b_field = b_field.value;
+        #                var scale = scale.value;
+        #
+        #                hf0 = data['hf_0'];
+        #                hf1 = data['hf_1'];
+        #                z0 = data['z_0'];
+        #                z1 = data['z_1'];
+        #                y0 = data['y_0'];
+        #                y1 = data['y_1'];
+        #                y01 = data['y0_1'];
+        #                y00 = data['y0_0'];
+        #                level0 = data['level_0'];
+        #                level1 = data['level_1'];
+        #                delta_l = data['delta_l'];
+        #
+        #                for (i=0; i < y0.length; i++) {
+        #                    y0[i] = hf0[i]*scale + z0[i]*b_field*scale + y00[i];
+        #                    y1[i] = hf1[i]*scale + z1[i]*b_field*scale + y01[i];
+        #                    level0[i] = y00[i] + hf0[i] + z0[i]*b_field;
+        #                    level1[i] = y01[i] + hf1[i] + z1[i]*b_field;
+        #                    delta_l[i] = level1[i] - level0[i]
+        #                };
+        #                source.change.emit();
+        #            """)
+        scale_hf_slider.js_on_change('value', line_callback)
+        scale_z_slider.js_on_change('value', line_callback)
+        # scale_slider.js_on_change('value', arrow_callback)
+        b_field_slider.js_on_change('value', line_callback)
+        # b_field_slider.js_on_change('value', arrow_callback)
+
+        if display:
+            print "displaying Hyperfine diagram"
+            show(row(p, column(scale_hf_slider, scale_z_slider, b_field_slider)))
+
+        return row(p, column(scale_hf_slider, scale_z_slider, b_field_slider))
+
+
+
 
 if __name__ == "__main__":
     from atom_library import *
@@ -248,11 +389,14 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_171
+    atom = Yb_173
+    #
+    # g = Grotrian(atom)
+    # levels = atom.levels.values()
+    # g.add_level(levels, color="black")
+    # g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
+    #
+    # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    g = Grotrian(atom)
-    levels = atom.levels.values()
-    g.add_level(levels, color="black")
-    g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
-
-    g.build_figure(display=True, labels=["hf", "zeeman", "term"])
+    h = HF_plot(atom.levels["2S1/2"])
+    h.build_figure(display=True)
