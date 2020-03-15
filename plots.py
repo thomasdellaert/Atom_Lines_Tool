@@ -315,7 +315,7 @@ class HF_plot:
         # p.add_tools(hover_arrows)
 
         print "applying sliders"
-        scale_hf_slider = models.Slider(start=1, end=10000, value=scale_splitting_hf, step=10, title="HF Scaling")
+        scale_hf_slider = models.Slider(start=1, end=100, value=scale_splitting_hf, step=1, title="HF Scaling")
         scale_z_slider = models.Slider(start=1, end=10000, value=scale_splitting_z, step=10, title="Zeeman Scaling")
         b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
