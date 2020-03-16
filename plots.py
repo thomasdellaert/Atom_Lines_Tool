@@ -282,7 +282,7 @@ class HF_plot:
                 m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
                 if abs(m_F_0-m_F_1) == 1 and F_0 != F_1 and index0 < index1:
                     line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0], 'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
-                                           'F_1': [F_1], 'hf_0': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
+                                           'F_1': [F_1], 'hf_1': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
                                            'delta_l': abs(sublevel0['y']-sublevel1['y'])})
                     table = table.append(line, ignore_index=True)
 
@@ -371,8 +371,8 @@ class HF_plot:
 
                        for (i=0; i < y0.length; i++) {
                            y0[i] = hf0[i]*hf_scale + z0[i]*b_field*z_scale + y00[i];
-                           # y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
-                           # delta_l[i] = y1[i] - y0[i];
+                           y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
+                           delta_l[i] = Math.abs(y1[i] - y0[i]);
                        };
                        source.change.emit();
                    """)
@@ -410,5 +410,5 @@ if __name__ == "__main__":
     #
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    h = HF_plot(atom.levels["2S1/2"])
+    h = HF_plot(atom.levels["2D3/2"])
     h.build_figure(display=True)
