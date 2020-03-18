@@ -240,17 +240,18 @@ class HF_plot:
 
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
 
-    def level_table(self, level, F, width=0.01, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black"):
-        table = level.data_table(hf=True, zeeman=True)
+    def level_table(self, level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
+        table = level.data_table(hf=True, zeeman=True, b_field=b_field)
         table = table[table['F']==F].reset_index()
         table['color'] = color
         table['name'] = level.name
 
-        table['y0'] = 0
+        table['y0'] = y0
         table['x0'] = 0
         table['x1'] = width
 
         table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
+        table['level'] = table['y0'] + table['hf'] + table['z'] * b_field
 
         table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
         table.loc[table['m_F'] != 0, 'hflabel'] = ""
@@ -271,7 +272,7 @@ class HF_plot:
     def arrow_table(self, level_table):
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
-                                   "delta_l"])
+                                   "level_0", "level_1", "delta_l"])
         for index0, sublevel0 in level_table.iterrows():
             for index1, sublevel1 in level_table.iterrows():
                 m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
@@ -279,7 +280,7 @@ class HF_plot:
                 if abs(m_F_0-m_F_1) == 1 and ((F_0 != F_1 and term_0==term_1) or (term_0!=term_1)) and index0 < index1:
                     line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0], 'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
                                            'F_1': [F_1], 'hf_1': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
-                                           'delta_l': abs(sublevel0['y']-sublevel1['y'])})
+                                           'level_0': sublevel0['level'], 'level_1': sublevel1['level'], 'delta_l': abs(sublevel0['level']-sublevel1['level'])})
                     table = table.append(line, ignore_index=True)
 
         return table
@@ -324,9 +325,9 @@ class HF_plot:
         p.add_tools(hover_arrows)
 
         print "applying sliders"
-        scale_hf_slider = models.Slider(start=1, end=10, value=scale_splitting_hf, step=0.1, title="HF Scaling")
+        scale_hf_slider = models.Slider(start=0.1, end=2, value=scale_splitting_hf, step=0.01, title="HF Scaling")
         scale_z_slider = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
-        b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
+        b_field_slider = models.Slider(start=0, end=20, value=1, step=0.001, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
                        var data = source.data;
@@ -363,12 +364,16 @@ class HF_plot:
                        y1 = data['y_1'];
                        y01 = data['y0_1'];
                        y00 = data['y0_0'];
+                       level0 = data['level_0'];
+                       level1 = data['level_1'];
                        delta_l = data['delta_l'];
 
                        for (i=0; i < y0.length; i++) {
                            y0[i] = hf0[i]*hf_scale + z0[i]*b_field*z_scale + y00[i];
                            y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
-                           delta_l[i] = Math.abs(y1[i] - y0[i]);
+                           level0[i] = hf0[i] + z0[i]*b_field + y00[i];
+                           level1[i] = hf1[i] + z1[i]*b_field + y01[i];
+                           delta_l[i] = Math.abs(level1[i] - level0[i]);
                        };
                        source.change.emit();
                    """)

@@ -110,7 +110,7 @@ class EnergyLevel:
         else:
             self.name = name
 
-    def data_table(self, hf=True, zeeman=True):
+    def data_table(self, hf=True, zeeman=True, b_field=0):
         table = DataFrame(columns=["configuration", "term", "level",
                                    "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
         if not hf:
@@ -133,7 +133,7 @@ class EnergyLevel:
                     for m_F in self.z_shifts[F].keys():
                         z = self.z_shifts[F][m_F]
                         hyperfine = self.hf_shifts[F]
-                        level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]
+                        level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]*b_field
                         line = DataFrame(
                             data={"configuration": [self.configuration], "term": [self.term], "level": level,
                                   "J": [self.J], "F": [F], "m_F": [m_F],
