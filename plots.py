@@ -240,7 +240,7 @@ class HF_plot:
 
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
 
-    def level_table(self, level, F, width=1.0, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black"):
+    def level_table(self, level, F, width=0.01, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black"):
         table = level.data_table(hf=True, zeeman=True)
         table = table[table['F']==F].reset_index()
         print table
@@ -298,24 +298,24 @@ class HF_plot:
         arrows = p.segment(x0="delta_l", y0="y_0", x1="delta_l", y1="y_1",
                            line_width=3, source=arrow_source)
 
-        # if labels is not []:
-        #     print "drawing labels"
-        # if "hf" in labels:
-        #     print "  hf labels"
-        #     hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
-        #                                text_baseline='middle', text_font_size="10pt")
-        #     p.add_layout(hflabels)
-        # if "zeeman" in labels:
-        #     print "  zeeman labels"
-        #     zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
-        #                               text_font_size="8pt")
-        #     p.add_layout(zlabels)
-        # if "term" in labels:
-        #     print "  term labels"
-        #     tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
-        #                               text_align='right', text_font_style="bold", text_font_size="12pt",
-        #                               text_baseline="middle")
-        #     p.add_layout(tlabels)
+        if labels is not []:
+            print "drawing labels"
+        if "hf" in labels:
+            print "  hf labels"
+            hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
+                                       text_baseline='middle', text_font_size="10pt")
+            p.add_layout(hflabels)
+        if "zeeman" in labels:
+            print "  zeeman labels"
+            zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
+                                      text_font_size="8pt")
+            p.add_layout(zlabels)
+        if "term" in labels:
+            print "  term labels"
+            tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
+                                      text_align='right', text_font_style="bold", text_font_size="12pt",
+                                      text_baseline="middle")
+            p.add_layout(tlabels)
 
         print "applying hovertext"
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
@@ -325,8 +325,8 @@ class HF_plot:
         p.add_tools(hover_arrows)
 
         print "applying sliders"
-        scale_hf_slider = models.Slider(start=1, end=100, value=scale_splitting_hf, step=1, title="HF Scaling")
-        scale_z_slider = models.Slider(start=1, end=10000, value=scale_splitting_z, step=10, title="Zeeman Scaling")
+        scale_hf_slider = models.Slider(start=1, end=10, value=scale_splitting_hf, step=0.1, title="HF Scaling")
+        scale_z_slider = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
         b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
