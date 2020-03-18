@@ -1,5 +1,5 @@
 # TODO: Lorentzian plot
-
+import copy
 
 from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
@@ -238,7 +238,7 @@ class HF_plot:
         for level in self.levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
 
-        self.plot_arrow_table = self.arrow_table(self.plot_line_table)
+        self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing='physical')
 
     def level_table(self, level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
         table = level.data_table(hf=True, zeeman=True, b_field=b_field)
@@ -269,19 +269,36 @@ class HF_plot:
 
         return table
 
-    def arrow_table(self, level_table):
+    def arrow_table(self, level_table, spacing="physical"):
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
-                                   "level_0", "level_1", "delta_l"])
+                                   "level_0", "level_1", "delta_l", "x"])
         for index0, sublevel0 in level_table.iterrows():
             for index1, sublevel1 in level_table.iterrows():
                 m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
                 term_0, term_1 = sublevel0['term'], sublevel1['term']
-                if abs(m_F_0-m_F_1) == 1 and ((F_0 != F_1 and term_0==term_1) or (term_0!=term_1)) and index0 < index1:
-                    line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0], 'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
-                                           'F_1': [F_1], 'hf_1': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
-                                           'level_0': sublevel0['level'], 'level_1': sublevel1['level'], 'delta_l': abs(sublevel0['level']-sublevel1['level'])})
+                if abs(m_F_0-m_F_1) <= 1 and ((F_0 != F_1 and term_0==term_1) or (term_0!=term_1)) and index0 < index1:
+                    line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0],
+                                           'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
+                                           'F_1': [F_1], 'hf_1': [sublevel1['hf']], 'm_F_1': [m_F_1],
+                                           'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
+                                           'level_0': sublevel0['level'], 'level_1': sublevel1['level'],
+                                           'delta_l': abs(sublevel0['level']-sublevel1['level']),
+                                           'x': abs(sublevel0['level']-sublevel1['level'])})
                     table = table.append(line, ignore_index=True)
+
+        def space_out_lines(series, spacing):
+            s = copy.deepcopy(series)
+            s.sort_values(ascending=True, inplace=True)
+            for i in range(len(s) - 1):
+                if s[i + 1] - s[i] < spacing:
+                    s[i] -= spacing - (s[i + 1] - s[i]) / 2
+                    s[i + 1] += spacing - (s[i + 1] - s[i]) / 2
+                    s = space_out_lines(s, spacing)
+            return s.sort_index()
+
+        if spacing != 'physical':
+            table['x'] = space_out_lines(table['x'], spacing)
 
         return table
 
@@ -392,8 +409,6 @@ class HF_plot:
         return row(p, column(scale_hf_slider, scale_z_slider, b_field_slider))
 
 
-
-
 if __name__ == "__main__":
     from atom_library import *
     from colors import uv_ir_lookup
@@ -411,5 +426,5 @@ if __name__ == "__main__":
     #
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    h = HF_plot((atom.levels["2D3/2"], 3), (atom.levels["2D3/2"], 4))
+    h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
     h.build_figure(display=True)
