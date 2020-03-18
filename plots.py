@@ -243,7 +243,6 @@ class HF_plot:
     def level_table(self, level, F, width=0.01, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black"):
         table = level.data_table(hf=True, zeeman=True)
         table = table[table['F']==F].reset_index()
-        print table
         table['color'] = color
         table['name'] = level.name
 
