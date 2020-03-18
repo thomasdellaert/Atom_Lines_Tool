@@ -1,4 +1,3 @@
-# TODO: Horizontal line plot given two levels (like in page 92 of Foot, or like in Barends/Maleki)
 # TODO: Lorentzian plot
 
 
@@ -227,8 +226,8 @@ class Grotrian:
 
 
 class HF_plot:
-    def __init__(self, level):
-        self.level = level
+    def __init__(self, *levels):
+        self.levels = levels
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
                                                   "color", "y0", "hf", "z",
@@ -236,11 +235,15 @@ class HF_plot:
         self.plot_arrow_table = DataFrame(columns=["F_0", "hf_0", "level_0", "m_F_0", "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0",
                                                    "F_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1", "x1_1", "y_1", "y0_1", "z_1",
                                                    "delta_l", "wavelength"])
-        self.plot_line_table = self.level_table(level)
+        for level in self.levels:
+            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
+
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
 
-    def level_table(self, level, width=1.0, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", zeeman=True, hf=True):
-        table = level.data_table(hf=hf, zeeman=zeeman)
+    def level_table(self, level, F, width=1.0, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black"):
+        table = level.data_table(hf=True, zeeman=True)
+        table = table[table['F']==F].reset_index()
+        print table
         table['color'] = color
         table['name'] = level.name
 
@@ -248,23 +251,16 @@ class HF_plot:
         table['x0'] = 0
         table['x1'] = width
 
-        if not zeeman:
+        table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
 
-            table['y'] = table['y0'] + table['hf'] * scale_splitting_hf
-            table['hflabel'] = "F="+str(table["F"])
-            table['hflx'] = table['x1']+0.05
-            table['hfly'] = table['y']
-        else:
-            table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
+        table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
+        table.loc[table['m_F'] != 0, 'hflabel'] = ""
+        table['hflx'] = width+0.05
+        table['hfly'] = table['y']
 
-            table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
-            table.loc[table['m_F'] != 0, 'hflabel'] = ""
-            table['hflx'] = width+0.05
-            table['hfly'] = table['y']
-
-            table['zlabel'] = table['m_F_frac']
-            table['zlx'] = table['x0']
-            table['zly'] = table['y']
+        table['zlabel'] = table['m_F_frac']
+        table['zlx'] = table['x0']
+        table['zly'] = table['y']
 
         table['tlabel'] = ""
         table.loc[[0], 'tlabel'] = table['term'] + table['J_frac']
@@ -280,7 +276,8 @@ class HF_plot:
         for index0, sublevel0 in level_table.iterrows():
             for index1, sublevel1 in level_table.iterrows():
                 m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
-                if abs(m_F_0-m_F_1) == 1 and F_0 != F_1 and index0 < index1:
+                term_0, term_1 = sublevel0['term'], sublevel1['term']
+                if abs(m_F_0-m_F_1) == 1 and ((F_0 != F_1 and term_0==term_1) or (term_0!=term_1)) and index0 < index1:
                     line = DataFrame(data={'F_0': [F_0], 'hf_0': [sublevel0['hf']], 'm_F_0': [m_F_0], 'y_0': [sublevel0['y']], 'y0_0': [sublevel0['y0']], 'z_0': [sublevel0['z']],
                                            'F_1': [F_1], 'hf_1': [sublevel1['hf']], 'm_F_1': [m_F_1], 'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
                                            'delta_l': abs(sublevel0['y']-sublevel1['y'])})
@@ -288,10 +285,10 @@ class HF_plot:
 
         return table
 
-
-    # TODO: make the HF plot
-    def build_figure(self, dimensions=(800, 1000), y_range=(-4e-2, 4e-2), x_range=(-0.5, 1.5), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
-        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
+    def build_figure(self, dimensions=(800, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1],
+                   y_range=(min(self.plot_line_table['y']), max(self.plot_line_table['y'])),
+                   x_range=(min(self.plot_arrow_table['delta_l']), max(self.plot_arrow_table['delta_l'])))
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_arrow_table)
         print "plotting levels"
@@ -410,5 +407,5 @@ if __name__ == "__main__":
     #
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    h = HF_plot(atom.levels["2D3/2"])
+    h = HF_plot((atom.levels["2D3/2"], 3), (atom.levels["2D3/2"], 4))
     h.build_figure(display=True)
