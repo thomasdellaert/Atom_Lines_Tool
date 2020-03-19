@@ -272,7 +272,7 @@ class HF_plot:
     def arrow_table(self, level_table, spacing="physical"):
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
-                                   "level_0", "level_1", "delta_l", "x"])
+                                   "level_0", "level_1", "delta_l", "x", "J0", "J1", "q"])
         for index0, sublevel0 in level_table.iterrows():
             for index1, sublevel1 in level_table.iterrows():
                 m_F_0, m_F_1, F_0, F_1 = sublevel0['m_F'], sublevel1['m_F'], sublevel0['F'], sublevel1['F']
@@ -284,7 +284,8 @@ class HF_plot:
                                            'y_1': [sublevel1['y']], 'y0_1': [sublevel1['y0']], 'z_1': [sublevel1['z']],
                                            'level_0': sublevel0['level'], 'level_1': sublevel1['level'],
                                            'delta_l': abs(sublevel0['level']-sublevel1['level']),
-                                           'x': abs(sublevel0['level']-sublevel1['level'])})
+                                           'x': abs(sublevel0['level']-sublevel1['level']),
+                                           'J_0': sublevel0['J'], 'J_1': sublevel1['J']})
                     table = table.append(line, ignore_index=True)
 
         def space_out_lines(series, spacing):
@@ -409,6 +410,41 @@ class HF_plot:
         return row(p, column(scale_hf_slider, scale_z_slider, b_field_slider))
 
 
+class Lorentzian_plot(HF_plot):
+    def build_figure(self, linewidth=2e-8, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+        import numpy as np
+        from math import pi
+        from transition_strengths import rel_transiton_strength
+        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1])
+
+        xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 5000)
+
+        lines=[]
+        for index, transition in self.plot_arrow_table.iterrows():
+            m0, m1 = transition['m_F_0'], transition['m_F_1']
+            F0, F1 = transition['F_0'], transition['F_1']
+            J1= transition['J_1']
+            I = self.levels[0][0].I
+            q = m1-m0
+
+            print I, q, J1, F0, m0, F1, m1
+            print rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
+
+            line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)*rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
+            print line
+            lines.append(line)
+        lines = np.sum(lines, axis=0)
+
+        print "plotting transitions"
+        p.line(x=xaxis, y=lines)
+
+        if display:
+            print "displaying Hyperfine diagram"
+            show(p)
+
+        return row(p)
+
+
 if __name__ == "__main__":
     from atom_library import *
     from colors import uv_ir_lookup
@@ -426,5 +462,8 @@ if __name__ == "__main__":
     #
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
-    h.build_figure(display=True)
+    # h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
+    # h.build_figure(display=True)
+
+    l = Lorentzian_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
+    l.build_figure(display=True)
