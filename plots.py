@@ -4,7 +4,7 @@ import copy
 from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
-from bokeh.layouts import row, column
+from bokeh.layouts import row, column, gridplot
 from colors import default_lookup
 
 class Grotrian:
@@ -407,15 +407,17 @@ class HF_plot:
             print "displaying Hyperfine diagram"
             show(row(p, column(scale_hf_slider, scale_z_slider, b_field_slider)))
 
-        return row(p, column(scale_hf_slider, scale_z_slider, b_field_slider))
+        return p, column(scale_hf_slider, scale_z_slider, b_field_slider)
 
 
 class Lorentzian_plot(HF_plot):
-    def build_figure(self, linewidth=2e-8, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+    def build_figure(self, linewidth=2e-8, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=[]):
         import numpy as np
         from math import pi
         from transition_strengths import rel_transiton_strength
-        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1])
+        if x_range is None:
+            x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
+        p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
         xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 5000)
 
@@ -429,7 +431,7 @@ class Lorentzian_plot(HF_plot):
 
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)*rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
             lines.append(line)
-        lines = np.sum(lines, axis=0)
+        lines = np.sum(lines,  axis=0)
 
         print "plotting transitions"
         p.line(x=xaxis, y=lines)
@@ -438,7 +440,7 @@ class Lorentzian_plot(HF_plot):
             print "displaying Hyperfine diagram"
             show(p)
 
-        return row(p)
+        return p
 
 
 if __name__ == "__main__":
@@ -459,9 +461,9 @@ if __name__ == "__main__":
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
     h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
-    HFplot = h.build_figure()
+    HFplot = h.build_figure(dimensions=(1600, 400))
 
     l = Lorentzian_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
-    Lplot = l.build_figure()
+    Lplot = l.build_figure(x_range=HFplot[0].x_range)
 
-    show(column(Lplot, HFplot))
+    show(row(gridplot([[Lplot], [HFplot[0]]]), HFplot[1]))
