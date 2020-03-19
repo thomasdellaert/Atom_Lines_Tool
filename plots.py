@@ -303,7 +303,7 @@ class HF_plot:
 
         return table
 
-    def build_figure(self, dimensions=(800, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1],
                    y_range=(min(self.plot_line_table['y']), max(self.plot_line_table['y'])),
                    x_range=(min(self.plot_arrow_table['delta_l']), max(self.plot_arrow_table['delta_l'])))
@@ -427,11 +427,7 @@ class Lorentzian_plot(HF_plot):
             I = self.levels[0][0].I
             q = m1-m0
 
-            print I, q, J1, F0, m0, F1, m1
-            print rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
-
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)*rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
-            print line
             lines.append(line)
         lines = np.sum(lines, axis=0)
 
@@ -462,8 +458,10 @@ if __name__ == "__main__":
     #
     # g.build_figure(display=True, labels=["hf", "zeeman", "term"])
 
-    # h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
-    # h.build_figure(display=True)
+    h = HF_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
+    HFplot = h.build_figure()
 
     l = Lorentzian_plot((atom.levels["2S1/2"], 3), (atom.levels["2D3/2"], 4))
-    l.build_figure(display=True)
+    Lplot = l.build_figure()
+
+    show(column(Lplot, HFplot))
