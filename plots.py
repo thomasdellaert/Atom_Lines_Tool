@@ -306,7 +306,8 @@ class HF_plot:
 
         return table
 
-    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[]):
+    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[],
+                     b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")):
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1],
                    y_range=(min(self.plot_line_table['y']), max(self.plot_line_table['y'])),
                    x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6))
@@ -348,7 +349,7 @@ class HF_plot:
         print "applying sliders"
         scale_hf_slider = models.Slider(start=0.1, end=2, value=scale_splitting_hf, step=0.01, title="HF Scaling")
         scale_z_slider = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
-        b_field_slider = models.Slider(start=0, end=20, value=1, step=0.001, title="B-field (G)")
+        b_field_slider = b_field_slider
         line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
                        var data = source.data;
@@ -414,7 +415,8 @@ class HF_plot:
 
 
 class Lorentzian_plot(HF_plot):
-    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=[]):
+    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=[],
+                     b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")):
         import numpy as np
         from math import pi
         from transition_strengths import rel_transiton_strength
@@ -464,8 +466,8 @@ class Lorentzian_plot(HF_plot):
         p.line(x='xaxis', y='totalline', source=lorentz_source)
 
         print "applying sliders"
-        b_field_slider = models.Slider(start=0, end=20, value=1, step=0.001, title="B-field (G)")
-        linewidth_slider = models.Slider(start=1e-8, end=1e-6, value=5e-8, step=1e-8, title="linewidth (THz)")
+
+        linewidth_slider = models.Slider(start=1e-9, end=1e-7, value=5e-9, step=1e-9, title="linewidth (THz)")
         lorentz_callback = models.CustomJS(
             args=dict(source=lorentz_source, b_field=b_field_slider, linewidth=linewidth_slider, transition_data=transition_data),
             code="""
@@ -508,7 +510,6 @@ class Lorentzian_plot(HF_plot):
         b_field_slider.js_on_change('value', lorentz_callback)
         linewidth_slider.js_on_change('value', lorentz_callback)
 
-
         if display:
             print "displaying Lorentzian diagram"
             show(row(p, column(b_field_slider, linewidth_slider)))
@@ -534,13 +535,14 @@ if __name__ == "__main__":
         g.build_figure(display=True)#, labels=["hf", "zeeman", "term"])
 
     def MakeMixedPlot(level0, level1):
+        b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
         h = HF_plot(level0, level1)
-        HFplot = h.build_figure(dimensions=(1600, 400))
+        HFplot = h.build_figure(dimensions=(1600, 400), b_field_slider=b_field_slider)
 
         l = Lorentzian_plot(level0, level1)
-        Lplot = l.build_figure(x_range=HFplot[0].x_range, linewidth=1e-7)
+        Lplot = l.build_figure(x_range=HFplot[0].x_range, b_field_slider=b_field_slider)
 
-        show(row(gridplot([[Lplot[0]], [HFplot[0]]]), gridplot([[Lplot[1]], [HFplot[1]]])))
+        show(row(gridplot([[Lplot[0]], [HFplot[0]]]), b_field_slider))
 
     def MakeLorentzPlot(level0, level1):
         l = Lorentzian_plot(level0, level1)
