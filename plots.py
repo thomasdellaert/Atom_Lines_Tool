@@ -1,4 +1,3 @@
-# TODO: Lorentzian plot
 import copy
 
 from bokeh.io import show
@@ -22,7 +21,8 @@ class Grotrian:
                                                         "configuration_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1",
                                                         "x1_1", "y_1", "y0_1", "z_1", "delta_l", "color", "wavelength"])
 
-    def level_table(self, level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
+    @staticmethod
+    def level_table(level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
                     offset_position=(0.0, 0.0), color="black", zeeman=True, hf=True):
         table = level.data_table(hf=hf, zeeman=zeeman)
         table['color'] = color
@@ -124,7 +124,8 @@ class Grotrian:
             self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
 
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting=1,
-                     labels=[], display=False):
+                     labels=None, display=False):
+        if labels is None: labels = []
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -225,7 +226,7 @@ class Grotrian:
         return row(p, column(scale_slider, b_field_slider))
 
 
-class HF_plot:
+class HFPlot:
     def __init__(self, *levels):
         self.levels = levels
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
@@ -240,18 +241,22 @@ class HF_plot:
 
         self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing='physical')
 
-    def level_table(self, level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
+    @staticmethod
+    def level_table(level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
         table = level.data_table(hf=True, zeeman=True, b_field=b_field)
         table = table[table['F']==F].reset_index()
         table['color'] = color
         table['name'] = level.name
 
         table['y0'] = y0
-        table['x0'] = 0
-        table['x1'] = width
 
         table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
         table['level'] = table['y0'] + table['hf'] + table['z'] * b_field
+
+
+        # TODO: make the horizontal lines work right
+        table['x0'] = max(table['level'])-min(table['level'])
+        table['x1'] = min(table['level'])-max(table['level'])
 
         table.loc[table['m_F'] == 0, 'hflabel'] = "F="+table["F_frac"]
         table.loc[table['m_F'] != 0, 'hflabel'] = ""
@@ -269,7 +274,8 @@ class HF_plot:
 
         return table
 
-    def arrow_table(self, level_table, spacing="physical"):
+    @staticmethod
+    def arrow_table(level_table, spacing="physical"):
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
                                    "level_0", "level_1", "delta_l", "x", "J0", "J1"])
@@ -306,8 +312,21 @@ class HF_plot:
 
         return table
 
-    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=[],
-                     b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")):
+    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=None,
+                     sliders=None):
+        if labels is None: labels = []
+        if sliders is None: sliders = {}
+        if 'b_field_slider' not in sliders.keys():
+            sliders['b_field_slider'] =  models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
+        if 'scale_hf_slider' not in sliders.keys():
+            sliders['scale_hf_slider'] = models.Slider(start=0.1, end=2, value=scale_splitting_hf, step=0.01, title="HF Scaling")
+        if 'scale_z_slider' not in sliders.keys():
+            sliders['scale_z_slider'] = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
+
+        scale_hf_slider = sliders['scale_hf_slider']
+        scale_z_slider = sliders['scale_z_slider']
+        b_field_slider = sliders['b_field_slider']
+
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1],
                    y_range=(min(self.plot_line_table['y']), max(self.plot_line_table['y'])),
                    x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6))
@@ -347,9 +366,7 @@ class HF_plot:
         p.add_tools(hover_arrows)
 
         print "applying sliders"
-        scale_hf_slider = models.Slider(start=0.1, end=2, value=scale_splitting_hf, step=0.01, title="HF Scaling")
-        scale_z_slider = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
-        b_field_slider = b_field_slider
+
         line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
                        var data = source.data;
@@ -414,11 +431,26 @@ class HF_plot:
         return p, column(scale_hf_slider, scale_z_slider, b_field_slider)
 
 
-class Lorentzian_plot(HF_plot):
-    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=[],
-                     b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")):
+class LorentzianPlot(HFPlot):
+
+    # TODO: Autoscale point density by minimum linewidth
+    # TODO: Maintain a vertical axis, at least optionally
+
+    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=None,
+                     sliders=None):
         import numpy as np
         from math import pi
+
+        #if labels is None: labels = []
+        if sliders is None: sliders = {}
+        if 'linewidth_slider' not in sliders.keys():
+            sliders['linewidth_slider'] = models.Slider(start=1e-9, end=1e-7, value=5e-9, step=1e-9, title="linewidth (THz)")
+        if 'b_field_slider' not in sliders.keys():
+            sliders['b_field_slider'] = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
+
+        b_field_slider = sliders['b_field_slider']
+        linewidth_slider = sliders['linewidth_slider']
+
         from transition_strengths import rel_transiton_strength
         if x_range is None:
             x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
@@ -448,8 +480,6 @@ class Lorentzian_plot(HF_plot):
         'hf_1': self.plot_arrow_table['hf_1'],
         'z_0': self.plot_arrow_table['z_0'],
         'z_1': self.plot_arrow_table['z_1'],
-        'y_0': self.plot_arrow_table['y_0'],
-        'y_1': self.plot_arrow_table['y_1'],
         'y0_1': self.plot_arrow_table['y0_1'],
         'y0_0': self.plot_arrow_table['y0_0'],
         'level_0': self.plot_arrow_table['level_0'],
@@ -467,7 +497,6 @@ class Lorentzian_plot(HF_plot):
 
         print "applying sliders"
 
-        linewidth_slider = models.Slider(start=1e-9, end=1e-7, value=5e-9, step=1e-9, title="linewidth (THz)")
         lorentz_callback = models.CustomJS(
             args=dict(source=lorentz_source, b_field=b_field_slider, linewidth=linewidth_slider, transition_data=transition_data),
             code="""
@@ -536,16 +565,16 @@ if __name__ == "__main__":
 
     def MakeMixedPlot(level0, level1):
         b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
-        h = HF_plot(level0, level1)
-        HFplot = h.build_figure(dimensions=(1600, 400), b_field_slider=b_field_slider)
+        h = HFPlot(level0, level1)
+        HFplot = h.build_figure(dimensions=(1600, 400), sliders={'b_field_slider': b_field_slider})
 
-        l = Lorentzian_plot(level0, level1)
-        Lplot = l.build_figure(x_range=HFplot[0].x_range, b_field_slider=b_field_slider)
+        l = LorentzianPlot(level0, level1)
+        Lplot = l.build_figure(x_range=HFplot[0].x_range, sliders={'b_field_slider': b_field_slider})
 
         show(row(gridplot([[Lplot[0]], [HFplot[0]]]), b_field_slider))
 
     def MakeLorentzPlot(level0, level1):
-        l = Lorentzian_plot(level0, level1)
+        l = LorentzianPlot(level0, level1)
         l.build_figure(display=True, linewidth=1e-7)
 
     level0 = (atom.levels["2S1/2"], 2)

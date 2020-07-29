@@ -30,6 +30,7 @@ def _populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1,
     atom.rezero()
 
 # TODO: populate_transitions()
+# TODO: export atoms to JSON to avoid neeting to reinitialize every time
 
 # region define 174Yb
 print "Initializing 174Yb"
