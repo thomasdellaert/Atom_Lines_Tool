@@ -312,16 +312,18 @@ class HFPlot:
 
         return table
 
-    def build_figure(self, dimensions=(1600, 1000), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, labels=None,
+    def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None,
                      sliders=None):
+        import sliders as sli
+
         if labels is None: labels = []
         if sliders is None: sliders = {}
         if 'b_field_slider' not in sliders.keys():
-            sliders['b_field_slider'] =  models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
+            sliders['b_field_slider'] = sli.b_field_slider
         if 'scale_hf_slider' not in sliders.keys():
-            sliders['scale_hf_slider'] = models.Slider(start=0.1, end=2, value=scale_splitting_hf, step=0.01, title="HF Scaling")
+            sliders['scale_hf_slider'] = sli.scale_hf_slider
         if 'scale_z_slider' not in sliders.keys():
-            sliders['scale_z_slider'] = models.Slider(start=1, end=10, value=scale_splitting_z, step=0.1, title="Zeeman Scaling")
+            sliders['scale_z_slider'] = sli.scale_z_slider
 
         scale_hf_slider = sliders['scale_hf_slider']
         scale_z_slider = sliders['scale_z_slider']
@@ -436,17 +438,18 @@ class LorentzianPlot(HFPlot):
     # TODO: Autoscale point density by minimum linewidth
     # TODO: Maintain a vertical axis, at least optionally
 
-    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, scale_splitting_hf=1, scale_splitting_z=1, display=False, x_range=None, labels=None,
+    def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, display=False, x_range=None, labels=None,
                      sliders=None):
         import numpy as np
         from math import pi
+        import sliders as sli
 
         #if labels is None: labels = []
         if sliders is None: sliders = {}
         if 'linewidth_slider' not in sliders.keys():
-            sliders['linewidth_slider'] = models.Slider(start=1e-9, end=1e-7, value=5e-9, step=1e-9, title="linewidth (THz)")
+            sliders['linewidth_slider'] = sli.linewidth_slider
         if 'b_field_slider' not in sliders.keys():
-            sliders['b_field_slider'] = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
+            sliders['b_field_slider'] = sli.b_field_slider
 
         b_field_slider = sliders['b_field_slider']
         linewidth_slider = sliders['linewidth_slider']
@@ -549,6 +552,7 @@ class LorentzianPlot(HFPlot):
 if __name__ == "__main__":
     from atom_library import *
     from colors import uv_ir_lookup
+    from sliders import default_sliders
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
@@ -564,14 +568,13 @@ if __name__ == "__main__":
         g.build_figure(display=True)#, labels=["hf", "zeeman", "term"])
 
     def MakeMixedPlot(level0, level1):
-        b_field_slider = models.Slider(start=0, end=5, value=1, step=0.0001, title="B-field (G)")
         h = HFPlot(level0, level1)
-        HFplot = h.build_figure(dimensions=(1600, 400), sliders={'b_field_slider': b_field_slider})
+        HFplot = h.build_figure(dimensions=(1600, 400), sliders=default_sliders)
 
         l = LorentzianPlot(level0, level1)
-        Lplot = l.build_figure(x_range=HFplot[0].x_range, sliders={'b_field_slider': b_field_slider})
+        Lplot = l.build_figure(x_range=HFplot[0].x_range, sliders=default_sliders)
 
-        show(row(gridplot([[Lplot[0]], [HFplot[0]]]), b_field_slider))
+        show(row(gridplot([[Lplot[0]], [HFplot[0]]]), column(default_sliders.values())))
 
     def MakeLorentzPlot(level0, level1):
         l = LorentzianPlot(level0, level1)
