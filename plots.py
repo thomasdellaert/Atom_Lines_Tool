@@ -1,5 +1,13 @@
-import copy
+"""
+Make Bokeh plot representations of Atoms and Energy Levels
 
+Classes:
+    Grotrian: Makes a Grotrian diagram for a given Atom object
+    HFPlot: Makes a plot of hyperfine sublevels and transitions for a given level or set of levels
+    LorenzianPlot: Plots what the spectrum would look like for a given level or set of levels
+"""
+
+import copy
 from bokeh.io import show
 from bokeh.plotting import figure, ColumnDataSource
 import bokeh.models as models
@@ -7,14 +15,11 @@ from bokeh.layouts import row, column, gridplot
 from colors import default_lookup
 
 class Grotrian:
-    def __init__(self, atom):
-        self.atom = atom
+    def __init__(self):
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                                  "color", "y0", "hf", "z",
-                                                  "y", "x0", "x1",
-                                                  "hflabel", "hflx", "hfly",
-                                                  "zlabel", "zlx", "zly",
+                                                  "color", "y0", "hf", "z", "y", "x0", "x1",
+                                                  "hflabel", "hflx", "hfly", "zlabel", "zlx", "zly",
                                                   "tlx", "tly"])
         self.plot_transition_table = DataFrame(columns=["F_0", "J_0", "configuration_0", "hf_0", "level_0", "m_F_0",
                                                         "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0", "F_1", "J_1",
@@ -24,6 +29,22 @@ class Grotrian:
     @staticmethod
     def level_table(level, width=1.0, sublevel_spacing=0.03, scale_splitting=1.0, override_position=False,
                     offset_position=(0.0, 0.0), color="black", zeeman=True, hf=True):
+        """
+        Generates a level table containing the data needed to draw the diagram
+
+        Args:
+            level: the Energy Level being processed
+            width: the total width the level should be drawn at
+            sublevel_spacing: the spacing between zeeman sublevels
+            scale_splitting: the initial scaling of the hyperfine and Zeeman splitting
+            override_position: override coordinates
+            offset_position: offset to the physical coordinates
+            color: the color the level should be drawn in
+            zeeman: whether to draw zeeman sublevels
+            hf: whether to draw hyperfine sublevels
+
+        Returns: None
+        """
         table = level.data_table(hf=hf, zeeman=zeeman)
         table['color'] = color
         table['name'] = level.name
@@ -68,6 +89,17 @@ class Grotrian:
         return table
     
     def transition_table(self, transition, x_off_0=0.5, x_off_1=0.5, color=default_lookup):
+        """
+        Generates the table needed to draw a transition in the diagram
+
+        Args:
+            transition: the transition being processed
+            x_off_0: the x-offset to apply on the first level
+            x_off_1: the x-offset to apply on the second level
+            color: the color of the transition
+
+        Returns: None
+        """
         table_0 = self.level_table(transition.level_0)
         table_1 = self.level_table(transition.level_1)
         line_0 = table_0.loc[(table_0["m_F"] == transition.m_F_0) & (table_0["F"] == transition.F_0)]
@@ -106,25 +138,71 @@ class Grotrian:
         return transition_table
 
     def add_level(self, levels, **kwargs):
+        """
+        Adds levels to the diagram
+
+        Args:
+            levels: the levels to be added
+            **kwargs: any settings with which the levels should be drawn
+
+        Returns: None
+        """
         for level in levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level, **kwargs))
         return self.plot_line_table
 
     def add_transition(self, transitions, **kwargs):
+        """
+        Adds transitions to the diagram
+
+        Args:
+            transitions: the transitions to be added
+            **kwargs: any settings with which the transitions should be drawn
+
+        Returns: None
+        """
         for transition in transitions:
             self.plot_transition_table = self.plot_transition_table.append(self.transition_table(transition, **kwargs))
         return self.plot_transition_table
 
     def remove_level(self, level_names):
+        """
+        removes the given levels from the table
+
+        Args:
+            level_names: the names of the levels to be deleted
+        """
         for name in level_names:
-            self.plot_line_table = self.plot_line_table[self.plot_line_table.name == name]
+            self.plot_line_table = self.plot_line_table[self.plot_line_table.name != name]
 
     def remove_transition(self, transition_names):
+        """
+        removes the given transitions from the table
+
+        Args:
+            transition_names: the names of the transitions to be deleted
+        """
         for name in transition_names:
-            self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name == name]
+            self.plot_transition_table = self.plot_transition_table[self.plot_transition_table.name != name]
 
     def build_figure(self, dimensions=(800, 1000), y_range=(-1e2, 1.3e3), x_range=(-0.5, 4.5), title=None, scale_splitting=1,
                      labels=None, display=False):
+        """
+        Builds the Bokeh plot
+
+        Args:
+            dimensions: the dimensions of the plot
+            y_range: the range of frequencies to plot (in THz)
+            x_range: the range of J-values to plot
+            title: the title of the plot
+            scale_splitting: The initial scale of the splittings
+            labels: The selection of labels to display. Can be any combination of "hf", "term", and "zeeman", or None
+            display: whether to display the table
+
+        Returns:
+            a complete Bokeh Grotrian diagram, with magnetic field and scale sliders
+
+        """
         if labels is None: labels = []
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
@@ -228,6 +306,12 @@ class Grotrian:
 
 class HFPlot:
     def __init__(self, *levels):
+        """
+        Generates a plot of the hyperfine sublevels and transitions in a given level or levels
+
+        Args:
+            *levels: the levels to consider
+        """
         self.levels = levels
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
                                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
@@ -236,6 +320,9 @@ class HFPlot:
         self.plot_arrow_table = DataFrame(columns=["F_0", "hf_0", "level_0", "m_F_0", "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0",
                                                    "F_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1", "x1_1", "y_1", "y0_1", "z_1",
                                                    "delta_l", "wavelength"])
+        if self.levels is None:
+            self.levels = []
+
         for level in self.levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
 
@@ -243,6 +330,20 @@ class HFPlot:
 
     @staticmethod
     def level_table(level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
+        """
+
+        Args:
+            level: the level to be processed
+            F: the F-value of the level
+            width: the total width of the level
+            b_field: the magnetic field
+            scale_splitting_hf: the hyperfine scaling
+            scale_splitting_z: the extra scaling to be applied for the Zeeman effect
+            color: the color of the level
+            y0: the y-offset at which to draw the level
+
+        Returns: None
+        """
         table = level.data_table(hf=True, zeeman=True, b_field=b_field)
         table = table[table['F']==F].reset_index()
         table['color'] = color
@@ -276,6 +377,17 @@ class HFPlot:
 
     @staticmethod
     def arrow_table(level_table, spacing="physical"):
+        """
+        Takes in the plot's level table and popultes a new table containing all the allowed transitions
+
+        Args:
+            level_table: the level table being processed
+            spacing: can be "physical" or "spaced"
+
+        Returns:
+            a table containing all the data for the transitions
+
+        """
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
                                    "level_0", "level_1", "delta_l", "x", "J0", "J1"])
@@ -295,7 +407,7 @@ class HFPlot:
                                                'J_0': sl0['J'], 'J_1': sl1['J']})
                         table = table.append(line, ignore_index=True)
 
-        #TODO: Color based on pi vs sigma transition
+            #TODO: Color based on pi vs sigma transition
 
         def space_out_lines(series, spacing):
             s = copy.deepcopy(series)
@@ -312,8 +424,40 @@ class HFPlot:
 
         return table
 
+    def add_level(self, *levels, **kwargs):
+        for level in levels:
+            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1], kwargs))
+        self.plot_arrow_table = self.arrow_table(self.plot_line_table)
+        return self.plot_line_table, self.plot_arrow_table
+
+    def remove_level(self, *level_names):
+        for name in level_names:
+            if type(name) is tuple:
+                self.plot_line_table = self.plot_line_table[self.plot_line_table.F != name[1] and self.plot_line_table.name != name[0]]
+                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.F_0 != name[1] and self.plot_arrow_table.name_0 != name[0]]
+                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.F_1 != name[1] and self.plot_arrow_table.name_1 != name[0]]
+            else:
+                self.plot_line_table = self.plot_line_table[self.plot_line_table.name != name]
+                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
+                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
+
+
+
     def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None,
                      sliders=None):
+        """
+
+        Args:
+            dimensions: the dimensions of the figure
+            title: the title
+            display: whether to display the final figure
+            labels: which labels to include. Can be any of "zeeman", "level", "term"
+            sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+
+        Returns:
+            a bokeh figure, and a column of the relevant sliders
+
+        """
         import sliders as sli
 
         if labels is None: labels = []
@@ -440,6 +584,21 @@ class LorentzianPlot(HFPlot):
 
     def build_figure(self, linewidth=5e-9, dimensions=(1600, 400), title=None, display=False, x_range=None, labels=None,
                      sliders=None):
+        """
+
+               Args:
+                   linewidth: the linewidth of the transition (in THz)
+                   dimensions: the dimensions of the figure
+                   title: the title
+                   display: whether to display the final figure
+                   x_range: the range of frequencies the plot should care about
+                   labels: which labels to include. Can be any of "zeeman", "level", "term"
+                   sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+
+               Returns:
+                   a bokeh figure, and a column of the relevant sliders
+
+               """
         import numpy as np
         from math import pi
         import sliders as sli
@@ -560,7 +719,7 @@ if __name__ == "__main__":
 
     atom = Yb_173
     def MakeGrotrian(atom):
-        g = Grotrian(atom)
+        g = Grotrian()
         levels = atom.levels.values()
         g.add_level(levels, color="black")
         g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
