@@ -14,6 +14,7 @@ import bokeh.models as models
 from bokeh.layouts import row, column, gridplot
 from colors import default_lookup
 
+
 class Grotrian:
     def __init__(self):
         self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
@@ -203,7 +204,8 @@ class Grotrian:
             a complete Bokeh Grotrian diagram, with magnetic field and scale sliders
 
         """
-        if labels is None: labels = []
+        if labels is None:
+            labels = []
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
@@ -313,13 +315,14 @@ class HFPlot:
             *levels: the levels to consider
         """
         self.levels = levels
-        self.plot_line_table = DataFrame(columns=["configuration", "term", "level",
-                                                  "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
-                                                  "color", "y0", "hf", "z",
-                                                  "y", "x0", "x1"])
-        self.plot_arrow_table = DataFrame(columns=["F_0", "hf_0", "level_0", "m_F_0", "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0",
-                                                   "F_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1", "x1_1", "y_1", "y0_1", "z_1",
-                                                   "delta_l", "wavelength"])
+        self.plot_line_table = DataFrame(columns=[
+            "configuration", "term", "level",
+            "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac",
+            "color", "y0", "hf", "z", "y", "x0", "x1"])
+        self.plot_arrow_table = DataFrame(columns=[
+            "F_0", "hf_0", "level_0", "m_F_0", "term_0", "x0_0", "x1_0", "y_0", "y0_0", "z_0",
+            "F_1", "hf_1", "level_1", "m_F_1", "term_1", "x0_1", "x1_1", "y_1", "y0_1", "z_1",
+            "delta_l", "wavelength"])
         if self.levels is None:
             self.levels = []
 
@@ -345,7 +348,7 @@ class HFPlot:
         Returns: None
         """
         table = level.data_table(hf=True, zeeman=True, b_field=b_field)
-        table = table[table['F']==F].reset_index()
+        table = table[table['F'] == F].reset_index()
         table['color'] = color
         table['name'] = level.name
 
@@ -353,7 +356,6 @@ class HFPlot:
 
         table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
         table['level'] = table['y0'] + table['hf'] + table['z'] * b_field
-
 
         # TODO: make the horizontal lines work right
         table['x0'] = max(table['level'])-min(table['level'])
@@ -407,7 +409,7 @@ class HFPlot:
                                                'J_0': sl0['J'], 'J_1': sl1['J']})
                         table = table.append(line, ignore_index=True)
 
-            #TODO: Color based on pi vs sigma transition
+            # TODO: Color based on pi vs sigma transition
 
         def space_out_lines(series, spacing):
             s = copy.deepcopy(series)
@@ -441,10 +443,7 @@ class HFPlot:
                 self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
                 self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
 
-
-
-    def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None,
-                     sliders=None):
+    def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None, sliders=None):
         """
 
         Args:
@@ -460,8 +459,10 @@ class HFPlot:
         """
         import sliders as sli
 
-        if labels is None: labels = []
-        if sliders is None: sliders = {}
+        if labels is None:
+            labels = []
+        if sliders is None:
+            sliders = {}
         if 'b_field_slider' not in sliders.keys():
             sliders['b_field_slider'] = sli.b_field_slider
         if 'scale_hf_slider' not in sliders.keys():
@@ -603,8 +604,10 @@ class LorentzianPlot(HFPlot):
         from math import pi
         import sliders as sli
 
-        #if labels is None: labels = []
-        if sliders is None: sliders = {}
+        # if labels is None:
+        #   labels = []
+        if sliders is None:
+            sliders = {}
         if 'linewidth_slider' not in sliders.keys():
             sliders['linewidth_slider'] = sli.linewidth_slider
         if 'b_field_slider' not in sliders.keys():
@@ -625,7 +628,7 @@ class LorentzianPlot(HFPlot):
         for index, transition in self.plot_arrow_table.iterrows():
             m0, m1 = transition['m_F_0'], transition['m_F_1']
             F0, F1 = transition['F_0'], transition['F_1']
-            J1= transition['J_1']
+            J1 = transition['J_1']
             I = self.levels[0][0].I
             q = m1-m0
 
@@ -638,19 +641,19 @@ class LorentzianPlot(HFPlot):
         totalline = np.sum(lines)
 
         transition_data = ColumnDataSource(data={
-        'hf_0': self.plot_arrow_table['hf_0'],
-        'hf_1': self.plot_arrow_table['hf_1'],
-        'z_0': self.plot_arrow_table['z_0'],
-        'z_1': self.plot_arrow_table['z_1'],
-        'y0_1': self.plot_arrow_table['y0_1'],
-        'y0_0': self.plot_arrow_table['y0_0'],
-        'level_0': self.plot_arrow_table['level_0'],
-        'level_1': self.plot_arrow_table['level_1'],
-        'delta_l': self.plot_arrow_table['delta_l'],
-        'strength': self.plot_arrow_table['strength']
+            'hf_0': self.plot_arrow_table['hf_0'],
+            'hf_1': self.plot_arrow_table['hf_1'],
+            'z_0': self.plot_arrow_table['z_0'],
+            'z_1': self.plot_arrow_table['z_1'],
+            'y0_1': self.plot_arrow_table['y0_1'],
+            'y0_0': self.plot_arrow_table['y0_0'],
+            'level_0': self.plot_arrow_table['level_0'],
+            'level_1': self.plot_arrow_table['level_1'],
+            'delta_l': self.plot_arrow_table['delta_l'],
+            'strength': self.plot_arrow_table['strength']
         })
 
-        lorentz_table = DataFrame(data={'xaxis': xaxis, 'totalline': totalline})#, 'transition_data': transition_data})
+        lorentz_table = DataFrame(data={'xaxis': xaxis, 'totalline': totalline})  # , 'transition_data': transition_data})
         lorentz_source = ColumnDataSource(lorentz_table)
 
         print "plotting transitions"
