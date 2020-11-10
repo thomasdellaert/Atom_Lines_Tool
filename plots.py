@@ -329,7 +329,7 @@ class HFPlot:
         for level in self.levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
 
-        self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing='physical')
+        self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing=10)
 
     @staticmethod
     def level_table(level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
@@ -443,7 +443,7 @@ class HFPlot:
                 self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
                 self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
 
-    def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None, sliders=None):
+    def build_figure(self, dimensions=(1600, 1000), title=None, display=False, labels=None, sliders=None, x_range=None):
         """
 
         Args:
@@ -480,8 +480,14 @@ class HFPlot:
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_arrow_table)
         print "plotting levels"
-        lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
-                          color="color", source=line_source)
+        if x_range is not None:
+            x_min = min(self.plot_arrow_table["delta_l"])
+            x_max = max(self.plot_arrow_table["delta_l"])
+            lines = p.segment(x0=x_min, y0="y", x1=x_max, y1="y",
+                              color="color", source=line_source)
+        else:
+            lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
+                              color="color", source=line_source)
         print "plotting transitions"
         arrows = p.segment(x0="delta_l", y0="y_0", x1="delta_l", y1="y_1",
                            line_width=3, source=arrow_source)
@@ -616,7 +622,7 @@ class LorentzianPlot(HFPlot):
         b_field_slider = sliders['b_field_slider']
         linewidth_slider = sliders['linewidth_slider']
 
-        from transition_strengths import rel_transiton_strength
+        from transition_strengths import rel_transition_strength
         if x_range is None:
             x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
@@ -633,7 +639,9 @@ class LorentzianPlot(HFPlot):
             q = m1-m0
 
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)
-            strength = rel_transiton_strength(I, q, J1, F0, m0, F1, m1)
+            strength = rel_transition_strength(I, q, J1, F0, m0, F1, m1)
+            if strength == 0:
+                print "strength for F={} m={} to F={} m={} was 0".format(F0, m0, F1, m1)
             lines.append(line*strength)
             strengths.append(strength)
 
@@ -730,11 +738,11 @@ if __name__ == "__main__":
         g.build_figure(display=True)#, labels=["hf", "zeeman", "term"])
 
     def MakeMixedPlot(level0, level1):
-        h = HFPlot(level0, level1)
-        HFplot = h.build_figure(dimensions=(1600, 400), sliders=default_sliders)
-
         l = LorentzianPlot(level0, level1)
-        Lplot = l.build_figure(x_range=HFplot[0].x_range, sliders=default_sliders)
+        Lplot = l.build_figure(dimensions=(1600, 400), sliders=default_sliders)
+
+        h = HFPlot(level0, level1)
+        HFplot = h.build_figure(dimensions=(1600, 400), x_range=Lplot[0].x_range, sliders=default_sliders)
 
         show(row(gridplot([[Lplot[0]], [HFplot[0]]]), column(default_sliders.values())))
 
@@ -742,8 +750,8 @@ if __name__ == "__main__":
         l = LorentzianPlot(level0, level1)
         l.build_figure(display=True, linewidth=1e-7)
 
-    level0 = (atom.levels["2S1/2"], 2)
-    level1 = (atom.levels["2S1/2"], 3)
+    level0 = (atom.levels["2F*7/2"], 3)
+    level1 = (atom.levels["2F*7/2"], 4)
 
     # MakeGrotrian(Yb_173)
     MakeMixedPlot(level0, level1)
