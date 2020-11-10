@@ -111,11 +111,11 @@ class EnergyLevel:
             self.name = name
 
     def data_table(self, hf=True, zeeman=True, b_field=0):
-        table = DataFrame(columns=["configuration", "term", "level",
-                                   "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
+        table = DataFrame(columns=["configuration", "term", "level", "I",
+                                   "L", "S", "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
         if not hf:
-            line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": self.level,
-                                   "J": [self.J], "F": [None], "m_F": [None],
+            line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": self.level, "I": self.I,
+                                   "L": [self.L], "S": [self.S], "J": [self.J], "F": [None], "m_F": [None],
                                    "J_frac": [term_frac(self.J)], "F_frac": [None], "m_F_frac": [None],
                                    "hf": [0.0], "z": [0.0]})
             table = table.append(line, ignore_index=True)
@@ -124,8 +124,8 @@ class EnergyLevel:
                 if not zeeman:
                     hyperfine = self.hf_shifts[F]
                     level = self.hf_levels[F]
-                    line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": level,
-                                           "J": [self.J], "F": [F], "m_F": [None],
+                    line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": level, "I": self.I,
+                                           "L": [self.L], "S": [self.S], "J": [self.J], "F": [F], "m_F": [None],
                                            "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
                                            "hf": [hyperfine], "z": [0.0]})
                     table = table.append(line, ignore_index=True)
@@ -135,8 +135,8 @@ class EnergyLevel:
                         hyperfine = self.hf_shifts[F]
                         level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]*b_field
                         line = DataFrame(
-                            data={"configuration": [self.configuration], "term": [self.term], "level": level,
-                                  "J": [self.J], "F": [F], "m_F": [m_F],
+                            data={"configuration": [self.configuration], "term": [self.term], "level": level, "I": self.I,
+                                  "L": [self.L], "S": [self.S], "J": [self.J], "F": [F], "m_F": [m_F],
                                   "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
                                   "hf": [hyperfine], "z": [z]})
                         table = table.append(line, ignore_index=True)

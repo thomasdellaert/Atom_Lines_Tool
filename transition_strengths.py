@@ -38,11 +38,14 @@ def E1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     return tot
 
 def E1_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
-    tot = 0
-    tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
-    tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
-    tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
-    return tot
+    if (L1-L0)%2 == 1:
+        tot = 0
+        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
+        tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
+        tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
+        return tot
+    else:
+        return 0
 
 def M1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     eps = eps / np.linalg.norm(eps)
@@ -55,8 +58,7 @@ def M1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     else:
         return 0
 
-def M1_transition_strength_avg(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
-    eps = eps / np.linalg.norm(eps)
+def M1_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     tot = 0
     if S1 == S0 and L1 == L0:
         tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0/3.0)
@@ -95,15 +97,39 @@ def E2_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     return tot
 
 
-# TODO: Implement spatial/non-polarized averages for these transition strengths, as they're currently dependent on polarization
-#  and k-vector
-
-# TODO: Phase out rel_transition strength and replace with E1_transition_strength (or something context-dependent)
+# TODO: Phase out rel_transition strength
 
 # TODO: Check the geometric factors on the averages for the E1 and M1 transitions
 
 if __name__ == '__main__':
-    for (Mg, Me) in [(-3, -4), (-2, -3), (-3, -3), (-1, -2), (-2, -2), (0, -1), (-1, -1), (1, 0), (-2, -1), (2, 1), (-1, 0),
-                     (3, 2), (0, 1), (1, 2), (2, 3), (3, 4)]:
-        s = float(rel_transition_strength(2.5, Me - Mg, 1.5, 3, Mg, 4, Me))
-        print "{0:.6f} {1:} {2:}".format(s, Mg, Me)
+    I = 2.5
+    L0 = 3
+    L1 = 3
+    S0 = 0.5
+    S1 = 0.5
+    J0 = 3.5
+    J1 = 3.5
+    F0 = 4
+    F1 = 3
+    G = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
+    E = [-3, -2, -1, 0, 1, 2, 3]
+    print "M1"
+    flg = False
+    for mg in G:
+        for me in E:
+            s = M1_transition_strength_avg(I, L0, S0, J0, F0, mg, L1, S1, J1, F1, me)
+            if s != 0:
+                flg = True
+                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+    if not flg:
+        print "no allowed transitions"
+    print "E1"
+    flg = False
+    for mg in G:
+        for me in E:
+            s = E1_transition_strength_avg(I, L0, S0, J0, F0, mg, L1, S1, J1, F1, me)
+            if s != 0:
+                flg = True
+                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+    if not flg:
+        print "no allowed transitions"
