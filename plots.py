@@ -4,7 +4,7 @@ Make Bokeh plot representations of Atoms and Energy Levels
 Classes:
     Grotrian: Makes a Grotrian diagram for a given Atom object
     HFPlot: Makes a plot of hyperfine sublevels and transitions for a given level or set of levels
-    LorenzianPlot: Plots what the spectrum would look like for a given level or set of levels
+    LorentzianPlot: Plots what the spectrum would look like for a given level or set of levels
 """
 
 import copy
@@ -325,11 +325,15 @@ class HFPlot:
             "delta_l", "wavelength"])
         if self.levels is None:
             self.levels = []
+        if len(self.levels) == 1:
+            self.internal = True
+        else:
+            self.internal = False
 
         for level in self.levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
 
-        self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing=10)
+        self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing="physical")
 
     @staticmethod
     def level_table(level, F, width=0.01, b_field=1, scale_splitting_hf=1.0, scale_splitting_z=1.0, color="black", y0=0):
@@ -377,8 +381,7 @@ class HFPlot:
 
         return table
 
-    @staticmethod
-    def arrow_table(level_table, spacing="physical"):
+    def arrow_table(self, level_table, spacing="physical"):
         """
         Takes in the plot's level table and popultes a new table containing all the allowed transitions
 
@@ -390,15 +393,21 @@ class HFPlot:
             a table containing all the data for the transitions
 
         """
+        from transition_strengths import M1_transition_strength_avg
+
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
-                                   "level_0", "level_1", "delta_l", "x", "J0", "J1"])
+                                   "level_0", "level_1", "delta_l", "x", "J0", "J1", "strength"])
         for index0, sl0 in level_table.iterrows():
             for index1, sl1 in level_table.iterrows():
-                m_F_0, m_F_1, F_0, F_1 = sl0['m_F'], sl1['m_F'], sl0['F'], sl1['F']
-                term_0, term_1 = sl0['term'], sl1['term']
-                if F_0 != F_1 or term_0 != term_1:
-                    if abs(m_F_0-m_F_1) <= 1 and index0 < index1:
+                I = sl0['I']
+                L_0, S_0, J_0, F_0, m_F_0 = sl0['L'], sl0['S'], sl0['J'], sl0['F'], sl0['m_F']
+                L_1, S_1, J_1, F_1, m_F_1 = sl1['L'], sl1['S'], sl1['J'], sl1['F'], sl1['m_F']
+                E1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                if E1_str == 0:
+                    print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
+                if index0 < index1 and E1_str != 0:
+                    if (self.internal and F_0 - F_1 ==0) or (F_0 - F_1 in [1, -1]):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
                                                'F_1': [F_1], 'hf_1': [sl1['hf']], 'm_F_1': [m_F_1],
@@ -406,12 +415,13 @@ class HFPlot:
                                                'level_0': sl0['level'], 'level_1': sl1['level'],
                                                'delta_l': abs(sl0['level']-sl1['level']),
                                                'x': abs(sl0['level']-sl1['level']),
-                                               'J_0': sl0['J'], 'J_1': sl1['J']})
+                                               'J_0': sl0['J'], 'J_1': sl1['J'], 'strength': E1_str})
                         table = table.append(line, ignore_index=True)
 
-            # TODO: Color based on pi vs sigma transition
+            # TODO: Color based on type of transition
 
         def space_out_lines(series, spacing):
+            # TODO: Fix this
             s = copy.deepcopy(series)
             s.sort_values(ascending=True, inplace=True)
             for i in range(len(s) - 1):
@@ -427,6 +437,11 @@ class HFPlot:
         return table
 
     def add_level(self, *levels, **kwargs):
+        self.levels = self.levels.append(levels)
+        if len(self.levels) == 1:
+            self.internal = True
+        else:
+            self.internal = False
         for level in levels:
             self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1], kwargs))
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
@@ -632,20 +647,10 @@ class LorentzianPlot(HFPlot):
         lines = []
         strengths = []
         for index, transition in self.plot_arrow_table.iterrows():
-            m0, m1 = transition['m_F_0'], transition['m_F_1']
-            F0, F1 = transition['F_0'], transition['F_1']
-            J1 = transition['J_1']
-            I = self.levels[0][0].I
-            q = m1-m0
-
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)
-            strength = rel_transition_strength(I, q, J1, F0, m0, F1, m1)
-            if strength == 0:
-                print "strength for F={} m={} to F={} m={} was 0".format(F0, m0, F1, m1)
+            strength = transition["strength"]
             lines.append(line*strength)
-            strengths.append(strength)
 
-        self.plot_arrow_table['strength'] = strengths
         totalline = np.sum(lines)
 
         transition_data = ColumnDataSource(data={
@@ -728,7 +733,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_173
+    atom = Yb_171
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
