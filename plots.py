@@ -361,7 +361,6 @@ class HFPlot:
         table['y'] = table['y0'] + table['hf'] * scale_splitting_hf + table['z'] * scale_splitting_z
         table['level'] = table['y0'] + table['hf'] + table['z'] * b_field
 
-        # TODO: make the horizontal lines work right
         table['x0'] = max(table['level'])-min(table['level'])
         table['x1'] = min(table['level'])-max(table['level'])
 
@@ -397,16 +396,25 @@ class HFPlot:
 
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
-                                   "level_0", "level_1", "delta_l", "x", "J0", "J1", "strength"])
+                                   "level_0", "level_1", "delta_l", "x", "J0", "J1",
+                                   "strength", "color"])
         for index0, sl0 in level_table.iterrows():
             for index1, sl1 in level_table.iterrows():
                 I = sl0['I']
                 L_0, S_0, J_0, F_0, m_F_0 = sl0['L'], sl0['S'], sl0['J'], sl0['F'], sl0['m_F']
                 L_1, S_1, J_1, F_1, m_F_1 = sl1['L'], sl1['S'], sl1['J'], sl1['F'], sl1['m_F']
-                E1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                m1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                if m_F_0 == m_F_1:
+                    color = "black"
+                elif m_F_0 - m_F_1 == 1:
+                    color = "orange"
+                elif m_F_1 - m_F_0 == 1:
+                    color = "blue"
+                else:
+                    color = "red"
                 # if E1_str == 0 and F_0 != F_1:
                 #     print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
-                if index0 <= index1 and E1_str != 0:
+                if index0 <= index1 and m1_str != 0:
                     if (self.internal and F_0 - F_1 == 0) or (F_0 - F_1 in [1, -1]):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
@@ -415,10 +423,9 @@ class HFPlot:
                                                'level_0': sl0['level'], 'level_1': sl1['level'],
                                                'delta_l': abs(sl0['level']-sl1['level']),
                                                'x': abs(sl0['level']-sl1['level']),
-                                               'J_0': sl0['J'], 'J_1': sl1['J'], 'strength': E1_str})
+                                               'J_0': [J_0], 'J_1': [J_1],
+                                               'strength': [m1_str], "color": [color]})
                         table = table.append(line, ignore_index=True)
-
-            # TODO: Color based on type of transition
 
         def space_out_lines(series, spacing):
             # TODO: Fix this
@@ -436,14 +443,14 @@ class HFPlot:
 
         return table
 
-    def add_level(self, *levels, **kwargs):
+    def add_level(self, *levels):
         self.levels = self.levels.append(levels)
         if len(self.levels) == 1:
             self.internal = True
         else:
             self.internal = False
         for level in levels:
-            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1], kwargs))
+            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
         return self.plot_line_table, self.plot_arrow_table
 
@@ -505,7 +512,7 @@ class HFPlot:
                               color="color", source=line_source)
         print "plotting transitions"
         arrows = p.segment(x0="delta_l", y0="y_0", x1="delta_l", y1="y_1",
-                           line_width=3, source=arrow_source)
+                           line_width=3, color="color", source=arrow_source)
 
         if labels is not []:
             print "drawing labels"
@@ -535,7 +542,8 @@ class HFPlot:
 
         print "applying sliders"
 
-        line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+        line_callback = models.CustomJS(args=dict(source=line_source,
+                                                  hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
                        var data = source.data;
                        var b_field = b_field.value;
@@ -556,7 +564,8 @@ class HFPlot:
                        };       
                        source.change.emit();
                    """)
-        arrow_callback = models.CustomJS(args=dict(source=arrow_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+        arrow_callback = models.CustomJS(args=dict(source=arrow_source,
+                                                   hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                          code="""
                        var data = source.data;
                        var b_field = b_field.value;
@@ -615,7 +624,7 @@ class LorentzianPlot(HFPlot):
                    display: whether to display the final figure
                    x_range: the range of frequencies the plot should care about
                    labels: which labels to include. Can be any of "zeeman", "level", "term"
-                   sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+                   sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", "scale_z_slider"
 
                Returns:
                    a bokeh figure, and a column of the relevant sliders
@@ -637,9 +646,8 @@ class LorentzianPlot(HFPlot):
         b_field_slider = sliders['b_field_slider']
         linewidth_slider = sliders['linewidth_slider']
 
-        from transition_strengths import rel_transition_strength
         if x_range is None:
-            x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
+            x_range = (min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
         xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 100000)
@@ -733,13 +741,15 @@ if __name__ == "__main__":
     pd.set_option('display.width', 1000)
 
     atom = Yb_171
+
+
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
         g.add_level(levels, color="black")
         g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
-        g.build_figure(display=True)#, labels=["hf", "zeeman", "term"])
+        g.build_figure(display=True)  # , labels=["hf", "zeeman", "term"])
 
     def MakeMixedPlot(level0, level1):
         l = LorentzianPlot(level0, level1)
@@ -756,6 +766,9 @@ if __name__ == "__main__":
 
     level0 = (atom.levels["2F*7/2"], 3)
     level1 = (atom.levels["2F*7/2"], 4)
+
+    # level0 = (atom.levels["2S1/2"], 1)
+    # level1 = (atom.levels["2S1/2"], 0)
 
     # MakeGrotrian(Yb_173)
     MakeMixedPlot(level0, level1)
