@@ -733,7 +733,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_171
+    atom = Yb_173
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
