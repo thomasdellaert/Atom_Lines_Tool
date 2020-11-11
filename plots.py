@@ -8,8 +8,7 @@ Classes:
 """
 
 import copy
-from bokeh.io import show
-from bokeh.plotting import figure, ColumnDataSource
+from bokeh.plotting import figure, ColumnDataSource, show
 import bokeh.models as models
 from bokeh.layouts import row, column, gridplot
 from colors import default_lookup
@@ -556,64 +555,60 @@ class HFPlot:
 
         print('applying sliders')
 
-        line_callback = models.CustomJS(args=dict(source=line_source,
-                                                  hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
-                                        code='''
-                       var data = source.data;
-                       var b_field = b_field.value;
-                       var hf_scale = hf_scale.value;
-                       var z_scale = z_scale.value
+        line_callback = models.CustomJS(
+            args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+            code='''
+                   var data = source.data;
+                   var b_field = b_field.value;
+                   var hf_scale = hf_scale.value;
+                   var z_scale = z_scale.value
 
-                       hf = data['hf'];
-                       z = data['z'];
-                       y = data['y'];
-                       y0 = data['y0'];
-                       hfly = data['hfly'];
-                       level = data['level'];
+                   const hf = data['hf'];
+                   const z = data['z'];
+                   const y = data['y'];
+                   const y0 = data['y0'];
+                   const hfly = data['hfly'];
+                   const level = data['level'];
 
-                       for (i=0; i < y.length; i++) {
-                           y[i] = hf[i]*hf_scale + z[i]*b_field*z_scale + y0[i];
-                           hfly[i] = y[i]
-                           level[i] = y0[i] + hf[i] + z[i]*b_field;
-                       };       
-                       source.change.emit();
+                   for (var i=0; i < y.length; i++) {
+                       y[i] = hf[i]*hf_scale + z[i]*b_field*z_scale + y0[i];
+                       hfly[i] = y[i];
+                       level[i] = y0[i] + hf[i] + z[i]*b_field;
+                   };       
+                   source.change.emit();
                    ''')
-        arrow_callback = models.CustomJS(args=dict(source=arrow_source,
-                                                   hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
-                                         code='''
-                       var data = source.data;
-                       var b_field = b_field.value;
-                       var hf_scale = hf_scale.value;
-                       var z_scale = z_scale.value;
+        arrow_callback = models.CustomJS(
+            args=dict(source=arrow_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+            code='''
+                   var data = source.data;
+                   var b_field = b_field.value;
+                   var hf_scale = hf_scale.value;
+                   var z_scale = z_scale.value;
 
-                       hf0 = data['hf_0'];
-                       hf1 = data['hf_1'];
-                       z0 = data['z_0'];
-                       z1 = data['z_1'];
-                       y0 = data['y_0'];
-                       y1 = data['y_1'];
-                       y01 = data['y0_1'];
-                       y00 = data['y0_0'];
-                       level0 = data['level_0'];
-                       level1 = data['level_1'];
-                       delta_l = data['delta_l'];
+                   const hf0 = data['hf_0'];
+                   const hf1 = data['hf_1'];
+                   const z0 = data['z_0'];
+                   const z1 = data['z_1'];
+                   const y0 = data['y_0'];
+                   const y1 = data['y_1'];
+                   const y01 = data['y0_1'];
+                   const y00 = data['y0_0'];
+                   const level0 = data['level_0'];
+                   const level1 = data['level_1'];
+                   const delta_l = data['delta_l'];
 
-                       for (i=0; i < y0.length; i++) {
-                           y0[i] = hf0[i]*hf_scale + z0[i]*b_field*z_scale + y00[i];
-                           y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
-                           level0[i] = hf0[i] + z0[i]*b_field + y00[i];
-                           level1[i] = hf1[i] + z1[i]*b_field + y01[i];
-                           delta_l[i] = Math.abs(level1[i] - level0[i]);
-                       };
-                       source.change.emit();
+                   for (var i=0; i < y0.length; i++) {
+                       y0[i] = hf0[i]*hf_scale + z0[i]*b_field*z_scale + y00[i];
+                       y1[i] = hf1[i]*hf_scale + z1[i]*b_field*z_scale + y01[i];
+                       level0[i] = hf0[i] + z0[i]*b_field + y00[i];
+                       level1[i] = hf1[i] + z1[i]*b_field + y01[i];
+                       delta_l[i] = Math.abs(level1[i] - level0[i]);
+                   };
+                   source.change.emit();
                    ''')
-        scale_hf_slider.js_on_change('value', line_callback)
-        scale_z_slider.js_on_change('value', line_callback)
-        b_field_slider.js_on_change('value', line_callback)
-
-        scale_hf_slider.js_on_change('value', arrow_callback)
-        scale_z_slider.js_on_change('value', arrow_callback)
-        b_field_slider.js_on_change('value', arrow_callback)
+        scale_hf_slider.js_on_change('value', line_callback, arrow_callback)
+        scale_z_slider.js_on_change('value', line_callback, arrow_callback)
+        b_field_slider.js_on_change('value', line_callback, arrow_callback)
 
         if display:
             print('displaying Hyperfine diagram')
@@ -637,8 +632,8 @@ class LorentzianPlot(HFPlot):
            title: the title
            display: whether to display the final figure
            x_range: the range of frequencies the plot should care about
-           labels: which labels to include. Can be any of 'zeeman', 'level', 'term'
-           sliders: which sliders to include. HF plot listens for 'b_field_slider', 'scale_hf_slider', 'scale_z_slider'
+           labels: which labels to include.
+           sliders: which sliders to include. Lorentz plot listens for 'b_field_slider', 'linewidth_slider'
 
        Returns:
            a bokeh figure, and a column of the relevant sliders
@@ -705,19 +700,19 @@ class LorentzianPlot(HFPlot):
                 var b_field = b_field.value;
                 var linewidth = linewidth.value;
                 
-                hf0 = transition_data['hf_0'];
-                hf1 = transition_data['hf_1'];
-                z0 = transition_data['z_0'];
-                z1 = transition_data['z_1'];
-                y01 = transition_data['y0_1'];
-                y00 = transition_data['y0_0'];
-                level0 = transition_data['level_0'];
-                level1 = transition_data['level_1'];
-                delta_l = transition_data['delta_l'];
-                strength = transition_data['strength'];
+                const hf0 = transition_data['hf_0'];
+                const hf1 = transition_data['hf_1'];
+                const z0 = transition_data['z_0'];
+                const z1 = transition_data['z_1'];
+                const y01 = transition_data['y0_1'];
+                const y00 = transition_data['y0_0'];
+                const level0 = transition_data['level_0'];
+                const level1 = transition_data['level_1'];
+                const delta_l = transition_data['delta_l'];
+                const strength = transition_data['strength'];
                 
-                x_axis = line_data['x_axis'];
-                total_line = line_data['total_line'];
+                const x_axis = line_data['x_axis'];
+                const total_line = line_data['total_line'];
                                 
                 for (i=0; i < hf0.length; i++) {
                     level0[i] = hf0[i] + z0[i]*b_field + y00[i];
@@ -725,9 +720,9 @@ class LorentzianPlot(HFPlot):
                     delta_l[i] = Math.abs(level1[i] - level0[i]);
                 };
                 
-                for (i=0; i< x_axis.length; i++){
+                for (var i=0; i< x_axis.length; i++){
                     let tot = 0;
-                    for (j=0; j<hf0.length; j++){
+                    for (var j=0; j<hf0.length; j++){
                         tot += strength[j]*(0.5/Math.PI)*linewidth/((x_axis[i]-delta_l[j])*(x_axis[i]-delta_l[j])+linewidth*linewidth/4);
                     };
                     total_line[i] = tot;
@@ -774,12 +769,17 @@ if __name__ == '__main__':
         h = HFPlot(l0, l1)
         HF_plot = h.build_figure(dimensions=(1600, 400), x_range=L_plot[0].x_range, sliders=default_sliders)
 
-        show(row(gridplot([[L_plot[0]], [HF_plot[0]]]), column(default_sliders.values())))
+        show(row(gridplot([[L_plot[0]], [HF_plot[0]]]), column(list(default_sliders.values()))))
 
 
     def MakeLorentzPlot(l0, l1):
         l = LorentzianPlot(l0, l1)
         l.build_figure(display=True, linewidth=1e-7)
+
+
+    def MakeHFPlot(l0, l1):
+        h = HFPlot(l0, l1)
+        h.build_figure(display=True)
 
 
     level0 = (atom.levels['2F*7/2'], 3)
@@ -794,3 +794,4 @@ if __name__ == '__main__':
     # MakeGrotrian(Yb_173)
     MakeMixedPlot(level0, level1)
     # MakeLorentzPlot(level0, level1)
+    # MakeHFPlot(level0, level1)
