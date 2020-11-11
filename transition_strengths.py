@@ -76,7 +76,7 @@ def E2_transition_strength_geom(eps, k, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M
     eps = eps / np.linalg.norm(eps)
     k = k / np.linalg.norm(k)
     if np.dot(eps, k) != 0:
-        print "k-vector and polarization are not orthogonal"
+        print("k-vector and polarization are not orthogonal")
     tot = 0
     tot += tkq_LS_transition_strength(I, 2, -2, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * \
         (eps[0] ** 2 + eps[1] ** 2) * (k[0] ** 2 + k[1] ** 2)
@@ -120,23 +120,23 @@ if __name__ == '__main__':
     F_1 = 3
     G = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
     E = [-3, -2, -1, 0, 1, 2, 3]
-    print "M1"
+    print("M1")
     flg = False
     for mg in G:
         for me in E:
             s = M1_transition_strength_avg(I_0, L_0, S_0, J_0, F_0, mg, L_1, S_1, J_1, F_1, me)
             if s != 0:
                 flg = True
-                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+                print("{0:.6f} {1:} {2:}".format(s, mg, me))
     if not flg:
-        print "no allowed transitions"
-    print "E1"
+        print("no allowed transitions")
+    print("E1")
     flg = False
     for mg in G:
         for me in E:
             s = E1_transition_strength_avg(I_0, L_0, S_0, J_0, F_0, mg, L_1, S_1, J_1, F_1, me)
             if s != 0:
                 flg = True
-                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+                print("{0:.6f} {1:} {2:}".format(s, mg, me))
     if not flg:
-        print "no allowed transitions"
+        print("no allowed transitions")
