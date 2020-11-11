@@ -18,7 +18,7 @@ def _wavelength_to_color(wl, colormap):
         wl = min(wavelengths)
     r, g, b = rf(wl), gf(wl), bf(wl)
 
-    return "#{:02x}{:02x}{:02x}".format(int(r), int(g), int(b))
+    return '#{:02x}{:02x}{:02x}'.format(int(r), int(g), int(b))
 
 def _make_lookup(colormap):
     lookup = {}
@@ -55,5 +55,5 @@ rich_ir_lookup = _make_lookup(_rich_ir_map)
 uv_ir_lookup = _make_lookup(_uv_ir_map)
 green_uv_lookup = _make_lookup(_green_uv_map)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     pass

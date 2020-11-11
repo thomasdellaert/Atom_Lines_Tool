@@ -1,5 +1,6 @@
 import py3nj as nj
 import numpy as np
+import warnings
 
 
 # noinspection PyTypeChecker
@@ -65,7 +66,7 @@ def E2_transition_strength_geom(eps, k, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M
     eps = eps / np.linalg.norm(eps)
     k = k / np.linalg.norm(k)
     if np.dot(eps, k) != 0:
-        print "k-vector and polarization are not orthogonal"
+        warnings.warn("k-vector and polarization are not orthogonal")
     tot = 0
     tot += tkq_LS_transition_strength(I, 2, -2, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * \
         (eps[0] ** 2 + eps[1] ** 2) * (k[0] ** 2 + k[1] ** 2)

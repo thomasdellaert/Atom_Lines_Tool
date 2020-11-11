@@ -5,17 +5,17 @@ from parsers import term_frac
 
 class EnergyLevel:
     # TODO: isotope shifts?
-    def __init__(self, df, df_index, name="term", I=0.0, A_coeff=0.0, B_coeff=0.0, C_coeff=0.0):
+    def __init__(self, df, df_index, name='term', I=0.0, A_coeff=0.0, B_coeff=0.0, C_coeff=0.0):
         self._initialized = False
         # get parameters from datafile
         my_row = df.iloc[df_index]
 
         (self.configuration, self.term, self.S, self.L, self.K,
          self.j1, self.j2, self.J, self.parity, self.level, self.lande) = my_row.values
-        if name == "term":
+        if name == 'term':
             self.name = self.term + term_frac(self.J)
-        elif name == "full":
-            self.name = self.configuration + " " + self.term + term_frac(self.J)
+        elif name == 'full':
+            self.name = self.configuration + ' ' + self.term + term_frac(self.J)
         else:
             self.name = name
         self.A_coeff = A_coeff
@@ -47,11 +47,11 @@ class EnergyLevel:
 
     def get_coupling(self):
         if self.L is not None:
-            coupling = "LS"
+            coupling = 'LS'
         elif self.K is not None:
-            coupling = "JK"
+            coupling = 'JK'
         else:
-            coupling = "jj"
+            coupling = 'jj'
         return coupling
 
     def get_hyperfine_data(self):
@@ -103,31 +103,31 @@ class EnergyLevel:
 
     def set_name(self, name):
         """Sets the name of the level. Can be 'term', 'full', or a custom name"""
-        if name == "term":
+        if name == 'term':
             self.name = self.term + term_frac(self.J)
-        elif name == "full":
-            self.name = self.configuration + " " + self.term + term_frac(self.J)
+        elif name == 'full':
+            self.name = self.configuration + ' ' + self.term + term_frac(self.J)
         else:
             self.name = name
 
     def data_table(self, hf=True, zeeman=True, b_field=0):
-        table = DataFrame(columns=["configuration", "term", "level", "I",
-                                   "L", "S", "J", "F", "m_F", "J_frac", "F_frac", "m_F_frac", "hf", "z"])
+        table = DataFrame(columns=['configuration', 'term', 'level', 'I',
+                                   'L', 'S', 'J', 'F', 'm_F', 'J_frac', 'F_frac', 'm_F_frac', 'hf', 'z'])
         if not hf:
-            line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": self.level, "I": self.I,
-                                   "L": [self.L], "S": [self.S], "J": [self.J], "F": [None], "m_F": [None],
-                                   "J_frac": [term_frac(self.J)], "F_frac": [None], "m_F_frac": [None],
-                                   "hf": [0.0], "z": [0.0]})
+            line = DataFrame(data={'configuration': [self.configuration], 'term': [self.term], 'level': self.level, 'I': self.I,
+                                   'L': [self.L], 'S': [self.S], 'J': [self.J], 'F': [None], 'm_F': [None],
+                                   'J_frac': [term_frac(self.J)], 'F_frac': [None], 'm_F_frac': [None],
+                                   'hf': [0.0], 'z': [0.0]})
             table = table.append(line, ignore_index=True)
         else:
             for F in self.Fs:
                 if not zeeman:
                     hyperfine = self.hf_shifts[F]
                     level = self.hf_levels[F]
-                    line = DataFrame(data={"configuration": [self.configuration], "term": [self.term], "level": level, "I": self.I,
-                                           "L": [self.L], "S": [self.S], "J": [self.J], "F": [F], "m_F": [None],
-                                           "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [None],
-                                           "hf": [hyperfine], "z": [0.0]})
+                    line = DataFrame(data={'configuration': [self.configuration], 'term': [self.term], 'level': level, 'I': self.I,
+                                           'L': [self.L], 'S': [self.S], 'J': [self.J], 'F': [F], 'm_F': [None],
+                                           'J_frac': [term_frac(self.J)], 'F_frac': [term_frac(F)], 'm_F_frac': [None],
+                                           'hf': [hyperfine], 'z': [0.0]})
                     table = table.append(line, ignore_index=True)
                 else:
                     for m_F in self.z_shifts[F].keys():
@@ -135,10 +135,10 @@ class EnergyLevel:
                         hyperfine = self.hf_shifts[F]
                         level = self.level + self.hf_shifts[F] + self.z_shifts[F][m_F]*b_field
                         line = DataFrame(
-                            data={"configuration": [self.configuration], "term": [self.term], "level": level, "I": self.I,
-                                  "L": [self.L], "S": [self.S], "J": [self.J], "F": [F], "m_F": [m_F],
-                                  "J_frac": [term_frac(self.J)], "F_frac": [term_frac(F)], "m_F_frac": [term_frac(m_F)],
-                                  "hf": [hyperfine], "z": [z]})
+                            data={'configuration': [self.configuration], 'term': [self.term], 'level': level, 'I': self.I,
+                                  'L': [self.L], 'S': [self.S], 'J': [self.J], 'F': [F], 'm_F': [m_F],
+                                  'J_frac': [term_frac(self.J)], 'F_frac': [term_frac(F)], 'm_F_frac': [term_frac(m_F)],
+                                  'hf': [hyperfine], 'z': [z]})
                         table = table.append(line, ignore_index=True)
         return table
 
@@ -150,7 +150,7 @@ class Transition:
         self.J_0, self.J_1 = level_0.J, level_1.J
         self.L_0, self.L_1 = level_0.L, level_1.L
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
-        self.name = level_0.name + str(F_0) + str(m_F_0) + "->" + level_1.name + str(F_1) + str(m_F_1)
+        self.name = level_0.name + str(F_0) + str(m_F_0) + '->' + level_1.name + str(F_1) + str(m_F_1)
 
         self.transition_table = self.data_table()
 
@@ -158,10 +158,10 @@ class Transition:
 
         table_0 = self.level_0.data_table()
         table_1 = self.level_1.data_table()
-        line_0 = table_0.loc[(table_0["m_F"] == self.m_F_0) & (table_0["F"] == self.F_0)]
-        line_1 = table_1.loc[(table_1["m_F"] == self.m_F_1) & (table_1["F"] == self.F_1)]
-        line_0 = line_0.drop(["J_frac", "F_frac", "m_F_frac"], axis=1)
-        line_1 = line_1.drop(["J_frac", "F_frac", "m_F_frac"], axis=1)
+        line_0 = table_0.loc[(table_0['m_F'] == self.m_F_0) & (table_0['F'] == self.F_0)]
+        line_1 = table_1.loc[(table_1['m_F'] == self.m_F_1) & (table_1['F'] == self.F_1)]
+        line_0 = line_0.drop(['J_frac', 'F_frac', 'm_F_frac'], axis=1)
+        line_1 = line_1.drop(['J_frac', 'F_frac', 'm_F_frac'], axis=1)
         if line_0.empty or line_1.empty:
             raise ValueError("The selected quantum numbers don't yield a transition. Check that they exist in the specified levels")
         line_0.columns = [str(col) + '_0' for col in line_0.columns]
@@ -171,12 +171,12 @@ class Transition:
 
         data_table = pd.concat([line_0, line_1], axis=1, ignore_index=False)
 
-        delta_l = abs(data_table["level_0"] - data_table["level_1"])
+        delta_l = abs(data_table['level_0'] - data_table['level_1'])
         wavelength = 299792.458/delta_l
 
-        data_table["delta_l"] = [delta_l]
-        data_table["wavelength"] = [wavelength]
-        data_table["name"] = [self.name]
+        data_table['delta_l'] = [delta_l]
+        data_table['wavelength'] = [wavelength]
+        data_table['name'] = [self.name]
         return data_table
 
     def get_type(self):
@@ -185,13 +185,13 @@ class Transition:
         d_F = self.F_1 - self.F_0
         d_J = self.J_1 - self.J_0
 
-        transition_type = "unknown"
+        transition_type = 'unknown'
         if abs(d_J) <= 1 and not (self.J_0 == 0  and self.J_1 == 0):
             if abs(d_F) <= 1:
                 if self.parity_0 != self.parity_1:
-                    transition_type = "E1"
+                    transition_type = 'E1'
 
-        return "dm: {}, dF: {}, dJ:{}".format(d_m, d_F, d_J), transition_type
+        return 'dm: {}, dF: {}, dJ:{}'.format(d_m, d_F, d_J), transition_type
 
 
 class Atom:
@@ -200,7 +200,7 @@ class Atom:
         self.levels = {}
         for level in levels:
             if level.name in self.levels.keys():
-                raise Exception("{} is already a level in this atom. ".format(level.name))
+                raise Exception('{} is already a level in this atom. '.format(level.name))
             self.levels[level.name] = level
 
         self.transitions = {}
@@ -225,36 +225,36 @@ class Atom:
             self.levels[level.name] = level
         self.rezero()
 
-    def remove_level(self, mode="keys", *levels):
-        if mode == "keys":
+    def remove_level(self, mode='keys', *levels):
+        if mode == 'keys':
             for key in levels:
                 self.levels.pop(key)
-        elif mode == "levels":
+        elif mode == 'levels':
             for level in levels:
                 self.levels.pop(level.name)
         else:
-            raise ValueError("Unrecognized mode")
+            raise ValueError('Unrecognized mode')
         self.rezero()
 
     def add_transition(self, transitions):
         for transition in transitions:
             self.transitions[transition.name] = transition
 
-    def remove_transition(self, mode="keys", *transitions):
-        if mode == "keys":
+    def remove_transition(self, mode='keys', *transitions):
+        if mode == 'keys':
             for key in transitions:
                 self.transitions.pop(key)
-        elif mode == "transitions":
+        elif mode == 'transitions':
             for transition in transitions:
                 self.transitions.pop(transition.name)
         else:
-            raise ValueError("Unrecognized mode")
+            raise ValueError('Unrecognized mode')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     from parsers import parse_NIST_levels
 
-    df = parse_NIST_levels("YbII_NIST_levels.csv")
+    df = parse_NIST_levels('YbII_NIST_levels.csv')
 
     S12_171 = EnergyLevel(df, 0, I=0.5, A_coeff=12.645e-3)  # 2S1/2
     P12_171 = EnergyLevel(df, 8, I=0.5, A_coeff=2.1079e-3)  # 2P1/2

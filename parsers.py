@@ -4,15 +4,15 @@ import numpy as np
 # TODO: Potentially make it possible to parse the ADS lines form to get transitions. Useless for Yb II for some reason
 # TODO: Reconcile DREAM and NIST data
 def fraction_to_float(frac):
-    if "/" in frac:
-        return float(frac.split("/")[0]) / float(frac.split("/")[1])
+    if '/' in frac:
+        return float(frac.split('/')[0]) / float(frac.split('/')[1])
     else:
         return float(frac)
 
 def term_frac(term):
     num = int(term / 0.5)
     if num % 2 != 0:
-        return str(num) + "/2"
+        return str(num) + '/2'
     else:
         return str(num / 2)
 
@@ -25,24 +25,24 @@ def read_term(term):
     jj coupling: j1, j2, parity
     """
 
-    am = ["S", "P", "D", "F", "G", "H"]
-    parity = "e"
+    am = ['S', 'P', 'D', 'F', 'G', 'H']
+    parity = 'e'
     L = None
     S = None
     K = None
     j1 = None
     j2 = None
-    if "*" in term:
-        parity = "o"
-        term = term.strip("*")
-    if "[" in term:
+    if '*' in term:
+        parity = 'o'
+        term = term.strip('*')
+    if '[' in term:
         S = (float(term[0]) - 1) / 2
-        K = fraction_to_float(term[1:].strip("[]"))
-    elif "(" in term:
-        jtup = term.strip("()").split(",")
+        K = fraction_to_float(term[1:].strip('[]'))
+    elif '(' in term:
+        jtup = term.strip('()').split(',')
         j1 = fraction_to_float(jtup[0])
         j2 = fraction_to_float(jtup[1])
-    elif term == "":
+    elif term == '':
         pass
     else:
         L = am.index(term[1])
@@ -57,44 +57,44 @@ def parse_NIST_levels(path):
 
     Columns the parser outputs:      Configuration, Term, Level (THz), Lande, j2, j1, K, L, S, Parity
     """
-    print "parsing file {} from NIST".format(path)
+    print 'parsing file {} from NIST'.format(path)
     df = read_csv(path)
     df = df.iloc[:250]
 
     for col in df.keys():
-        df[col] = df[col].str.strip("=\" ?")
+        df[col] = df[col].str.strip('=\" ?')
 
     # Drop empty/useless columns
     try:
-        df = df.drop(["Uncertainty (cm-1)", "Leading percentages", "Reference"], axis=1)
+        df = df.drop(['Uncertainty (cm-1)', 'Leading percentages', 'Reference'], axis=1)
     except KeyError:
         pass
 
     # Convert columns that should be floats to floats
-    for i, j in enumerate(df["Level (cm-1)"]):
+    for i, j in enumerate(df['Level (cm-1)']):
         try:
-            df["Level (cm-1)"][i] = float(df["Level (cm-1)"][i])
+            df['Level (cm-1)'][i] = float(df['Level (cm-1)'][i])
         except ValueError:
-            df["Level (cm-1)"][i] = None
+            df['Level (cm-1)'][i] = None
         try:
-            df["Lande"][i] = float(df["Lande"][i])
+            df['Lande'][i] = float(df['Lande'][i])
         except ValueError:
-            df["Lande"][i] = None
+            df['Lande'][i] = None
         try:
-            df["J"][i] = fraction_to_float(df["J"][i])
+            df['J'][i] = fraction_to_float(df['J'][i])
         except ValueError:
-            df["J"][i] = None
+            df['J'][i] = None
 
     # convert level in wavenumbers to level in terahertz
-    df["Level (cm-1)"] *= 2.99792458e-2
-    df.rename(columns={"Level (cm-1)": "Level (THz)"}, inplace=True)
+    df['Level (cm-1)'] *= 2.99792458e-2
+    df.rename(columns={'Level (cm-1)': 'Level (THz)'}, inplace=True)
 
     # based ion the terms, populate the dataset with numerical columns that specify the state
-    for i in ["j2", "j1", "K", "L", "S"]:
+    for i in ['j2', 'j1', 'K', 'L', 'S']:
         df.insert(2, i, None)
-    df.insert(8, "Parity", None)
-    for i, term in enumerate(df["Term"]):
-        df["L"][i], df["S"][i], df["K"][i], df["j1"][i], df["j2"][i], df["Parity"][i] = read_term(term)
+    df.insert(8, 'Parity', None)
+    for i, term in enumerate(df['Term']):
+        df['L'][i], df['S'][i], df['K'][i], df['j1'][i], df['j2'][i], df['Parity'][i] = read_term(term)
     return df
 
 def parse_DREAM_lines(path):
@@ -107,20 +107,20 @@ def parse_DREAM_lines(path):
     This can be done pretty quickly using the excel data workup tools.
     Columns the parser wants to see: Wavelength, LL, LL Parity, LL J, UL, UL Parity, UL J, log gf, gA, CF
     """
-    print "parsing file {} from DREAM".format(path)
+    print 'parsing file {} from DREAM'.format(path)
     df = read_csv(path)
 
-    df["g"] = 2*df["LL_J"] + 1
-    df["log_g"] = np.log10(df["g"])
-    df["A"] = df["gA"] / df["g"]
-    df["log_f"] = df["log_gf"] - df["log_g"]
+    df['g'] = 2*df['LL_J'] + 1
+    df['log_g'] = np.log10(df['g'])
+    df['A'] = df['gA'] / df['g']
+    df['log_f'] = df['log_gf'] - df['log_g']
 
-    df["Wavelength"] /= 10
-    df["LL"] *= 2.99792458e-2
-    df["UL"] *= 2.99792458e-2
+    df['Wavelength'] /= 10
+    df['LL'] *= 2.99792458e-2
+    df['UL'] *= 2.99792458e-2
 
-    df["LL_Parity"].str.strip("()")
-    df["UL_Parity"].str.strip("()")
+    df['LL_Parity'].str.strip('()')
+    df['UL_Parity'].str.strip('()')
 
     return df
 
@@ -138,18 +138,18 @@ def _build_reference_plot_NIST(df, nstates, addlabels = False):
     p = figure(plot_width=600, plot_height=800, y_range=(-100, 2400))
 
     source = ColumnDataSource(data=dict(
-        x0=df["J"][:nstates],
-        x1=df["J"][:nstates] + 1,
-        y0=df["Level (THz)"][:nstates],
-        term=df["Term"][:nstates], ))
+        x0=df['J'][:nstates],
+        x1=df['J'][:nstates] + 1,
+        y0=df['Level (THz)'][:nstates],
+        term=df['Term'][:nstates], ))
 
-    hover = models.HoverTool(tooltips=[("index", "$index"), ("Term", "@term"), ("Level", "@y0")])
+    hover = models.HoverTool(tooltips=[('index', '$index'), ('Term', '@term'), ('Level', '@y0')])
     p.add_tools(hover)
-    p.segment("x0", "y0", "x1", "y0", line_width=2, source=source)
+    p.segment('x0', 'y0', 'x1', 'y0', line_width=2, source=source)
 
     if addlabels:
-        labels = models.LabelSet(x="x0", y="y0", text="term", level="glyph", source=source,
-                                 x_offset=-5, y_offset=0, text_font_size="8pt")
+        labels = models.LabelSet(x='x0', y='y0', text='term', level='glyph', source=source,
+                                 x_offset=-5, y_offset=0, text_font_size='8pt')
         p.add_layout(labels)
 
     return p
@@ -167,27 +167,27 @@ def _build_reference_plot_DREAM(df, nstates, addlabels=False):
     p = figure(plot_width=600, plot_height=800, y_range=(-100, 2400))
 
     source = ColumnDataSource(data=dict(
-        x0=df["LL_J"][:nstates],
-        x1=df["LL_J"][:nstates] + 1,
-        y0=df["LL"][:nstates]))
+        x0=df['LL_J'][:nstates],
+        x1=df['LL_J'][:nstates] + 1,
+        y0=df['LL'][:nstates]))
 
-    hover = models.HoverTool(tooltips=[("index", "$index"), ("Level", "@y0")])
+    hover = models.HoverTool(tooltips=[('index', '$index'), ('Level', '@y0')])
     p.add_tools(hover)
-    p.segment("x0", "y0", "x1", "y0", line_width=2, source=source)
+    p.segment('x0', 'y0', 'x1', 'y0', line_width=2, source=source)
 
     if addlabels:
-        labels = models.LabelSet(x="x0", y="y0", text="y0", level="glyph", source=source,
-                                 x_offset=-5, y_offset=0, text_font_size="8pt")
+        labels = models.LabelSet(x='x0', y='y0', text='y0', level='glyph', source=source,
+                                 x_offset=-5, y_offset=0, text_font_size='8pt')
         p.add_layout(labels)
 
     return p
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     from bokeh.layouts import row
     from bokeh.io import show
 
-    df_DREAM = parse_DREAM_lines("YbII_DREAM_lines.csv")
-    df_NIST = parse_NIST_levels("YbII_NIST_levels.csv")
+    df_DREAM = parse_DREAM_lines('YbII_DREAM_lines.csv')
+    df_NIST = parse_NIST_levels('YbII_NIST_levels.csv')
 
     p1 = _build_reference_plot_DREAM(df_DREAM, 5000)
     p2 = _build_reference_plot_NIST(df_NIST, 200)
