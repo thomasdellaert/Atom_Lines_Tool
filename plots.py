@@ -404,10 +404,10 @@ class HFPlot:
                 L_0, S_0, J_0, F_0, m_F_0 = sl0['L'], sl0['S'], sl0['J'], sl0['F'], sl0['m_F']
                 L_1, S_1, J_1, F_1, m_F_1 = sl1['L'], sl1['S'], sl1['J'], sl1['F'], sl1['m_F']
                 E1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
-                if E1_str == 0:
-                    print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
-                if index0 < index1 and E1_str != 0:
-                    if (self.internal and F_0 - F_1 ==0) or (F_0 - F_1 in [1, -1]):
+                # if E1_str == 0 and F_0 != F_1:
+                #     print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
+                if index0 <= index1 and E1_str != 0:
+                    if (self.internal and F_0 - F_1 == 0) or (F_0 - F_1 in [1, -1]):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
                                                'F_1': [F_1], 'hf_1': [sl1['hf']], 'm_F_1': [m_F_1],
@@ -433,6 +433,8 @@ class HFPlot:
 
         if spacing != 'physical':
             table['x'] = space_out_lines(table['x'], spacing)
+
+        print table
 
         return table
 
@@ -733,7 +735,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_171
+    atom = Yb_173
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
