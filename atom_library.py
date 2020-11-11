@@ -1,6 +1,7 @@
 from atoms import *
 from parsers import parse_NIST_levels
 from pandas import read_csv
+import jsons
 
 df_Yb = parse_NIST_levels("YbII_NIST_levels.csv")
 
@@ -75,4 +76,12 @@ print("171Yb Initialized")
 
 
 if __name__ == "__main__":
-    print(Yb_171.__dict__)
+    json171 = jsons.dump(Yb_171)
+    file = open("Yb171.json", "w")
+    file.write(str(json171))
+    file.close()
+
+    json173 = jsons.dump(Yb_173)
+    file = open("Yb173.json", "w")
+    file.write(str(json173))
+    file.close()

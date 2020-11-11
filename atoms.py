@@ -150,9 +150,9 @@ class Transition:
         self.J_0, self.J_1 = level_0.J, level_1.J
         self.L_0, self.L_1 = level_0.L, level_1.L
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
-        self.name = level_0.name + str(F_0) + str(m_F_0) + "->" + level_1.name + str(F_1) + str(m_F_1)
+        self.name = str(level_0.name + str(F_0) + str(m_F_0) + "->" + level_1.name + str(F_1) + str(m_F_1))
 
-        self.transition_table = self.data_table()
+        # self.transition_table = self.data_table()
 
     def data_table(self):
 
@@ -163,7 +163,8 @@ class Transition:
         line_0 = line_0.drop(["J_frac", "F_frac", "m_F_frac"], axis=1)
         line_1 = line_1.drop(["J_frac", "F_frac", "m_F_frac"], axis=1)
         if line_0.empty or line_1.empty:
-            raise ValueError("The selected quantum numbers don't yield a transition. Check that they exist in the specified levels")
+            raise ValueError("The selected quantum numbers don't yield a transition." +
+                             " Check that they exist in the specified levels")
         line_0.columns = [str(col) + '_0' for col in line_0.columns]
         line_1.columns = [str(col) + '_1' for col in line_1.columns]
         line_0 = line_0.reset_index(drop=True)
@@ -211,7 +212,7 @@ class Atom:
 
     def rezero(self):
         """Takes the minimum hyperfine level in the atom and sets it to zero, shifting all others appropriately"""
-        gs = self.levels.values()[0]
+        gs = list(self.levels.values())[0]
         gs_level = min(gs.hf_levels.values())
         for state in self.levels.values():
             if state.level < gs_level:
