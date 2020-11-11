@@ -331,7 +331,7 @@ class HFPlot:
             self.internal = False
 
         for level in self.levels:
-            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
+            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]), ignore_index=True)
 
         self.plot_arrow_table = self.arrow_table(self.plot_line_table, spacing="physical")
 
@@ -433,8 +433,6 @@ class HFPlot:
 
         if spacing != 'physical':
             table['x'] = space_out_lines(table['x'], spacing)
-
-        print table
 
         return table
 
@@ -627,8 +625,8 @@ class LorentzianPlot(HFPlot):
         from math import pi
         import sliders as sli
 
-        # if labels is None:
-        #   labels = []
+        if labels is None:
+          labels = []
         if sliders is None:
             sliders = {}
         if 'linewidth_slider' not in sliders.keys():
@@ -644,10 +642,9 @@ class LorentzianPlot(HFPlot):
             x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
-        xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 10000)
+        xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 100000)
 
         lines = []
-        strengths = []
         for index, transition in self.plot_arrow_table.iterrows():
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)
             strength = transition["strength"]
@@ -735,7 +732,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
 
-    atom = Yb_173
+    atom = Yb_171
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
