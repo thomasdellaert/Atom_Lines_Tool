@@ -392,7 +392,7 @@ class HFPlot:
             a table containing all the data for the transitions
 
         """
-        from transition_strengths import M1_transition_strength_avg
+        from transition_strengths import M1_transition_strength_avg, E1_transition_strength_avg, E2_transition_strength_avg
 
         table = DataFrame(columns=["F_0", "hf_0", "m_F_0", "y_0", "y0_0", "z_0",
                                    "F_1", "hf_1", "m_F_1", "y_1", "y0_1", "z_1",
@@ -400,10 +400,19 @@ class HFPlot:
                                    "strength", "color"])
         for index0, sl0 in level_table.iterrows():
             for index1, sl1 in level_table.iterrows():
+                # TODO: Make this iteration more efficient
                 I = sl0['I']
                 L_0, S_0, J_0, F_0, m_F_0 = sl0['L'], sl0['S'], sl0['J'], sl0['F'], sl0['m_F']
                 L_1, S_1, J_1, F_1, m_F_1 = sl1['L'], sl1['S'], sl1['J'], sl1['F'], sl1['m_F']
-                m1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                term_0, term_1 = sl0["term"], sl1["term"]
+
+                if term_0 == term_1:
+                    strength = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                elif abs(L_0 - L_1) > 1:
+                    strength = E2_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                else:
+                    strength = E1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+
                 if m_F_0 == m_F_1:
                     color = "black"
                 elif m_F_0 - m_F_1 == 1:
@@ -412,9 +421,10 @@ class HFPlot:
                     color = "blue"
                 else:
                     color = "red"
+
                 # if E1_str == 0 and F_0 != F_1:
                 #     print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
-                if index0 <= index1 and m1_str != 0:
+                if index0 <= index1 and strength != 0:
                     if (self.internal and F_0 - F_1 == 0) or (F_0 - F_1 in [1, -1]):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
@@ -424,18 +434,18 @@ class HFPlot:
                                                'delta_l': abs(sl0['level']-sl1['level']),
                                                'x': abs(sl0['level']-sl1['level']),
                                                'J_0': [J_0], 'J_1': [J_1],
-                                               'strength': [m1_str], "color": [color]})
+                                               'strength': [strength], "color": [color]})
                         table = table.append(line, ignore_index=True)
 
-        def space_out_lines(series, spacing):
+        def space_out_lines(series, new_spacing):
             # TODO: Fix this
             s = copy.deepcopy(series)
             s.sort_values(ascending=True, inplace=True)
             for i in range(len(s) - 1):
-                if s[i + 1] - s[i] < spacing:
-                    s[i] -= spacing - (s[i + 1] - s[i]) / 2
-                    s[i + 1] += spacing - (s[i + 1] - s[i]) / 2
-                    s = space_out_lines(s, spacing)
+                if s[i + 1] - s[i] < new_spacing:
+                    s[i] -= new_spacing - (s[i + 1] - s[i]) / 2
+                    s[i + 1] += new_spacing - (s[i + 1] - s[i]) / 2
+                    s = space_out_lines(s, new_spacing)
             return s.sort_index()
 
         if spacing != 'physical':
@@ -457,9 +467,12 @@ class HFPlot:
     def remove_level(self, *level_names):
         for name in level_names:
             if type(name) is tuple:
-                self.plot_line_table = self.plot_line_table[self.plot_line_table.F != name[1] and self.plot_line_table.name != name[0]]
-                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.F_0 != name[1] and self.plot_arrow_table.name_0 != name[0]]
-                self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.F_1 != name[1] and self.plot_arrow_table.name_1 != name[0]]
+                self.plot_line_table = self.plot_line_table[
+                    self.plot_line_table.F != name[1] and self.plot_line_table.name != name[0]]
+                self.plot_arrow_table = self.plot_arrow_table[
+                    self.plot_arrow_table.F_0 != name[1] and self.plot_arrow_table.name_0 != name[0]]
+                self.plot_arrow_table = self.plot_arrow_table[
+                    self.plot_arrow_table.F_1 != name[1] and self.plot_arrow_table.name_1 != name[0]]
             else:
                 self.plot_line_table = self.plot_line_table[self.plot_line_table.name != name]
                 self.plot_arrow_table = self.plot_arrow_table[self.plot_arrow_table.name_0 != name]
@@ -474,6 +487,7 @@ class HFPlot:
             display: whether to display the final figure
             labels: which labels to include. Can be any of "zeeman", "level", "term"
             sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+            x_range: the range of the plot
 
         Returns:
             a bokeh figure, and a column of the relevant sliders
@@ -635,7 +649,8 @@ class LorentzianPlot(HFPlot):
         import sliders as sli
 
         if labels is None:
-          labels = []
+            labels = []
+        # TODO: implement labels
         if sliders is None:
             sliders = {}
         if 'linewidth_slider' not in sliders.keys():
@@ -650,15 +665,15 @@ class LorentzianPlot(HFPlot):
             x_range = (min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
-        xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 100000)
+        x_axis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 100000)
 
         lines = []
         for index, transition in self.plot_arrow_table.iterrows():
-            line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)
+            line = (1/(2*pi))*linewidth/((x_axis-transition['delta_l'])**2+linewidth**2/4)
             strength = transition["strength"]
             lines.append(line*strength)
 
-        totalline = np.sum(lines)
+        total_line = np.sum(lines)
 
         transition_data = ColumnDataSource(data={
             'hf_0': self.plot_arrow_table['hf_0'],
@@ -673,19 +688,19 @@ class LorentzianPlot(HFPlot):
             'strength': self.plot_arrow_table['strength']
         })
 
-        lorentz_table = DataFrame(data={'xaxis': xaxis, 'totalline': totalline})  # , 'transition_data': transition_data})
+        lorentz_table = DataFrame(data={'x_axis': x_axis, 'total_line': total_line})  # , 'transition_data': transition_data})
         lorentz_source = ColumnDataSource(lorentz_table)
 
         print "plotting transitions"
 
-        p.line(x='xaxis', y='totalline', source=lorentz_source)
+        p.line(x='x_axis', y='total_line', source=lorentz_source)
 
         print "applying sliders"
 
         lorentz_callback = models.CustomJS(
             args=dict(source=lorentz_source, b_field=b_field_slider, linewidth=linewidth_slider, transition_data=transition_data),
             code="""
-                var linedata = source.data;
+                var line_data = source.data;
                 var transition_data = transition_data.data;
                 var b_field = b_field.value;
                 var linewidth = linewidth.value;
@@ -701,8 +716,8 @@ class LorentzianPlot(HFPlot):
                 delta_l = transition_data['delta_l'];
                 strength = transition_data['strength'];
                 
-                xaxis = linedata['xaxis'];
-                totalline = linedata['totalline'];
+                x_axis = line_data['x_axis'];
+                total_line = line_data['total_line'];
                                 
                 for (i=0; i < hf0.length; i++) {
                     level0[i] = hf0[i] + z0[i]*b_field + y00[i];
@@ -710,12 +725,12 @@ class LorentzianPlot(HFPlot):
                     delta_l[i] = Math.abs(level1[i] - level0[i]);
                 };
                 
-                for (i=0; i< xaxis.length; i++){
+                for (i=0; i< x_axis.length; i++){
                     let tot = 0;
                     for (j=0; j<hf0.length; j++){
-                        tot += strength[j]*(0.5/Math.PI)*linewidth/((xaxis[i]-delta_l[j])*(xaxis[i]-delta_l[j])+linewidth*linewidth/4);
+                        tot += strength[j]*(0.5/Math.PI)*linewidth/((x_axis[i]-delta_l[j])*(x_axis[i]-delta_l[j])+linewidth*linewidth/4);
                     };
-                    totalline[i] = tot;
+                    total_line[i] = tot;
                 };
                 
                 source.change.emit();
@@ -751,17 +766,17 @@ if __name__ == "__main__":
 
         g.build_figure(display=True)  # , labels=["hf", "zeeman", "term"])
 
-    def MakeMixedPlot(level0, level1):
-        l = LorentzianPlot(level0, level1)
-        Lplot = l.build_figure(dimensions=(1600, 400), sliders=default_sliders)
+    def MakeMixedPlot(l0, l1):
+        l = LorentzianPlot(l0, l1)
+        L_plot = l.build_figure(dimensions=(1600, 400), sliders=default_sliders)
 
-        h = HFPlot(level0, level1)
-        HFplot = h.build_figure(dimensions=(1600, 400), x_range=Lplot[0].x_range, sliders=default_sliders)
+        h = HFPlot(l0, l1)
+        HF_plot = h.build_figure(dimensions=(1600, 400), x_range=L_plot[0].x_range, sliders=default_sliders)
 
-        show(row(gridplot([[Lplot[0]], [HFplot[0]]]), column(default_sliders.values())))
+        show(row(gridplot([[L_plot[0]], [HF_plot[0]]]), column(default_sliders.values())))
 
-    def MakeLorentzPlot(level0, level1):
-        l = LorentzianPlot(level0, level1)
+    def MakeLorentzPlot(l0, l1):
+        l = LorentzianPlot(l0, l1)
         l.build_figure(display=True, linewidth=1e-7)
 
     level0 = (atom.levels["2F*7/2"], 3)
@@ -769,6 +784,9 @@ if __name__ == "__main__":
 
     # level0 = (atom.levels["2S1/2"], 1)
     # level1 = (atom.levels["2S1/2"], 0)
+
+    # level0 = (atom.levels["2D5/2"], 3)
+    # level1 = (atom.levels["2P*3/2"], 2)
 
     # MakeGrotrian(Yb_173)
     MakeMixedPlot(level0, level1)
