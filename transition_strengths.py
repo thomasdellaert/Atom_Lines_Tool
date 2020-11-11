@@ -108,23 +108,23 @@ if __name__ == '__main__':
     F_1 = 3
     G = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
     E = [-3, -2, -1, 0, 1, 2, 3]
-    print "M1"
+    print("M1")
     flg = False
     for mg in G:
         for me in E:
             s = M1_transition_strength_avg(I_0, L_0, S_0, J_0, F_0, mg, L_1, S_1, J_1, F_1, me)
             if s != 0:
                 flg = True
-                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+                print("{0:.6f} {1:} {2:}".format(s, mg, me))
     if not flg:
-        print "no allowed transitions"
-    print "E1"
+        print("no allowed transitions")
+    print("E1")
     flg = False
     for mg in G:
         for me in E:
             s = E1_transition_strength_avg(I_0, L_0, S_0, J_0, F_0, mg, L_1, S_1, J_1, F_1, me)
             if s != 0:
                 flg = True
-                print "{0:.6f} {1:} {2:}".format(s, mg, me)
+                print("{0:.6f} {1:} {2:}".format(s, mg, me))
     if not flg:
-        print "no allowed transitions"
+        print("no allowed transitions")

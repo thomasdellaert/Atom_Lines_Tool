@@ -211,7 +211,7 @@ class Atom:
 
     def rezero(self):
         """Takes the minimum hyperfine level in the atom and sets it to zero, shifting all others appropriately"""
-        gs = self.levels.values()[0]
+        gs = list(self.levels.values())[0]
         gs_level = min(gs.hf_levels.values())
         for state in self.levels.values():
             if state.level < gs_level:
@@ -259,4 +259,4 @@ if __name__ == '__main__':
     S12_171 = EnergyLevel(df, 0, I=0.5, A_coeff=12.645e-3)  # 2S1/2
     P12_171 = EnergyLevel(df, 8, I=0.5, A_coeff=2.1079e-3)  # 2P1/2
     cycling_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
-    print cycling_171.name
+    print(cycling_171.name)
