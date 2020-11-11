@@ -73,7 +73,7 @@ class EnergyLevel:
                 else:
                     FE2 = (3*IdotJ**2 + 1.5*IdotJ - I*(I+1)*J*(J+1))/(2.0*I*(2.0*I-1.0)*J*(2.0*J-1.0))
 
-                if J <= 1 or I <=1:
+                if J <= 1 or I <= 1:
                     FM3 = 0
                 else:
                     FM3 = (10*IdotJ**3 + 20*IdotJ**2 + 2*IdotJ*(-3*I*(I+1)*J*(J+1)+I*(I+1)+J*(J+1)+3)
@@ -186,7 +186,7 @@ class Transition:
         d_J = self.J_1 - self.J_0
 
         transition_type = "unknown"
-        if abs(d_J) <= 1 and not (self.J_0 == 0  and self.J_1 == 0):
+        if abs(d_J) <= 1 and not (self.J_0 == 0 and self.J_1 == 0):
             if abs(d_F) <= 1:
                 if self.parity_0 != self.parity_1:
                     transition_type = "E1"
@@ -259,4 +259,4 @@ if __name__ == "__main__":
     S12_171 = EnergyLevel(df, 0, I=0.5, A_coeff=12.645e-3)  # 2S1/2
     P12_171 = EnergyLevel(df, 8, I=0.5, A_coeff=2.1079e-3)  # 2P1/2
     cycling_171 = Transition(level_0=S12_171, F_0=0, m_F_0=0, level_1=P12_171, F_1=1, m_F_1=0)
-    print cycling_171.name
+    print(cycling_171.name)

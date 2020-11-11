@@ -209,34 +209,34 @@ class Grotrian:
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], y_range=y_range, x_range=x_range)
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_transition_table)
-        print "plotting levels"
+        print("plotting levels")
         lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
                           color="color", source=line_source)
-        print "plotting transitions"
+        print("plotting transitions")
         arrows = p.segment(x0="x_0", y0="y_0", x1="x_1", y1="y_1",
                            color="color", line_width=3, source=arrow_source)
         # TODO: Maybe make the arrows arrow-y? Might be more trouble than it's worth. Bokeh arrows are insufficient.
 
         if labels is not []:
-            print "drawing labels"
+            print("drawing labels")
         if "hf" in labels:
-            print "  hf labels"
+            print("  hf labels")
             hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
                                        text_baseline='middle', text_font_size="10pt")
             p.add_layout(hflabels)
         if "zeeman" in labels:
-            print "  zeeman labels"
+            print("  zeeman labels")
             zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
                                       text_font_size="8pt")
             p.add_layout(zlabels)
         if "term" in labels:
-            print "  term labels"
+            print("  term labels")
             tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
                                       text_align='right', text_font_style="bold", text_font_size="12pt",
                                       text_baseline="middle")
             p.add_layout(tlabels)
 
-        print "applying hovertext"
+        print("applying hovertext")
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000 000 000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz"),
@@ -244,7 +244,7 @@ class Grotrian:
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
-        print "applying sliders"
+        print("applying sliders")
         scale_slider = models.Slider(start=1, end=10000, value=scale_splitting, step=10, title="Scaling")
         b_field_slider = models.Slider(start=0, end=20, value=0, step=0.001, title="B-field (G)")
         line_callback = models.CustomJS(args=dict(source=line_source, scale=scale_slider, b_field=b_field_slider),
@@ -300,7 +300,7 @@ class Grotrian:
         b_field_slider.js_on_change('value', arrow_callback)
 
         if display:
-            print "displaying Grotrian diagram"
+            print("displaying Grotrian diagram")
             show(row(p, column(scale_slider, b_field_slider)))
 
         return row(p, column(scale_slider, b_field_slider))
@@ -405,9 +405,9 @@ class HFPlot:
                 L_1, S_1, J_1, F_1, m_F_1 = sl1['L'], sl1['S'], sl1['J'], sl1['F'], sl1['m_F']
                 E1_str = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
                 if E1_str == 0:
-                    print "strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1)
+                    print("strength for F={} m={} to F={} m={} was 0".format(F_0, m_F_0, F_1, m_F_1))
                 if index0 < index1 and E1_str != 0:
-                    if (self.internal and F_0 - F_1 ==0) or (F_0 - F_1 in [1, -1]):
+                    if (self.internal and F_0 - F_1 == 0) or (F_0 - F_1 in [1, -1]):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
                                                'F_1': [F_1], 'hf_1': [sl1['hf']], 'm_F_1': [m_F_1],
@@ -436,14 +436,14 @@ class HFPlot:
 
         return table
 
-    def add_level(self, *levels, **kwargs):
+    def add_level(self, *levels):
         self.levels = self.levels.append(levels)
         if len(self.levels) == 1:
             self.internal = True
         else:
             self.internal = False
         for level in levels:
-            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1], kwargs))
+            self.plot_line_table = self.plot_line_table.append(self.level_table(level[0], level[1]))
         self.plot_arrow_table = self.arrow_table(self.plot_line_table)
         return self.plot_line_table, self.plot_arrow_table
 
@@ -467,6 +467,7 @@ class HFPlot:
             display: whether to display the final figure
             labels: which labels to include. Can be any of "zeeman", "level", "term"
             sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+            x_range: the range over which to display the plot
 
         Returns:
             a bokeh figure, and a column of the relevant sliders
@@ -494,7 +495,7 @@ class HFPlot:
                    x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6))
         line_source = ColumnDataSource(self.plot_line_table)
         arrow_source = ColumnDataSource(self.plot_arrow_table)
-        print "plotting levels"
+        print("plotting levels")
         if x_range is not None:
             x_min = min(self.plot_arrow_table["delta_l"])
             x_max = max(self.plot_arrow_table["delta_l"])
@@ -503,39 +504,40 @@ class HFPlot:
         else:
             lines = p.segment(x0="x0", y0="y", x1="x1", y1="y",
                               color="color", source=line_source)
-        print "plotting transitions"
+        print("plotting transitions")
         arrows = p.segment(x0="delta_l", y0="y_0", x1="delta_l", y1="y_1",
                            line_width=3, source=arrow_source)
 
         if labels is not []:
-            print "drawing labels"
+            print("drawing labels")
         if "hf" in labels:
-            print "  hf labels"
+            print("  hf labels")
             hflabels = models.LabelSet(x="hflx", y="y", text="hflabel", level="glyph", source=line_source,
                                        text_baseline='middle', text_font_size="10pt")
             p.add_layout(hflabels)
         if "zeeman" in labels:
-            print "  zeeman labels"
+            print("  zeeman labels")
             zlabels = models.LabelSet(x="zlx", y="y", text="zlabel", level="glyph", source=line_source,
                                       text_font_size="8pt")
             p.add_layout(zlabels)
         if "term" in labels:
-            print "  term labels"
+            print("  term labels")
             tlabels = models.LabelSet(x="tlx", y="tly", text="tlabel", level="glyph", source=line_source,
                                       text_align='right', text_font_style="bold", text_font_size="12pt",
                                       text_baseline="middle")
             p.add_layout(tlabels)
 
-        print "applying hovertext"
+        print("applying hovertext")
         hover_lines = models.HoverTool(tooltips=[("Term", "@name F=@F_frac, m_F=@m_F_frac"),
                                                  ("Level", "@level{0.000 000 000}")], renderers=[lines])
         hover_arrows = models.HoverTool(tooltips=[("Name", "@name"), ("Frequency", "@delta_l{0.000000} THz")], renderers=[arrows])
         p.add_tools(hover_lines)
         p.add_tools(hover_arrows)
 
-        print "applying sliders"
+        print("applying sliders")
 
-        line_callback = models.CustomJS(args=dict(source=line_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+        line_callback = models.CustomJS(args=dict(source=line_source,
+                                                  hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                         code="""
                        var data = source.data;
                        var b_field = b_field.value;
@@ -556,7 +558,8 @@ class HFPlot:
                        };       
                        source.change.emit();
                    """)
-        arrow_callback = models.CustomJS(args=dict(source=arrow_source, hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
+        arrow_callback = models.CustomJS(args=dict(source=arrow_source,
+                                                   hf_scale=scale_hf_slider, z_scale=scale_z_slider, b_field=b_field_slider),
                                          code="""
                        var data = source.data;
                        var b_field = b_field.value;
@@ -593,7 +596,7 @@ class HFPlot:
         b_field_slider.js_on_change('value', arrow_callback)
 
         if display:
-            print "displaying Hyperfine diagram"
+            print("displaying Hyperfine diagram")
             show(row(p, column(scale_hf_slider, scale_z_slider, b_field_slider)))
 
         return p, column(scale_hf_slider, scale_z_slider, b_field_slider)
@@ -615,7 +618,7 @@ class LorentzianPlot(HFPlot):
                    display: whether to display the final figure
                    x_range: the range of frequencies the plot should care about
                    labels: which labels to include. Can be any of "zeeman", "level", "term"
-                   sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", and "scale_z_slider"
+                   sliders: which sliders to include. HF plot listens for "b_field_slider", "scale_hf_slider", "scale_z_slider"
 
                Returns:
                    a bokeh figure, and a column of the relevant sliders
@@ -637,15 +640,13 @@ class LorentzianPlot(HFPlot):
         b_field_slider = sliders['b_field_slider']
         linewidth_slider = sliders['linewidth_slider']
 
-        from transition_strengths import rel_transition_strength
         if x_range is None:
-            x_range=(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
+            x_range = (min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
         xaxis = np.linspace(min(self.plot_arrow_table['delta_l'])-1e-6, max(self.plot_arrow_table['delta_l'])+1e-6, 10000)
 
         lines = []
-        strengths = []
         for index, transition in self.plot_arrow_table.iterrows():
             line = (1/(2*pi))*linewidth/((xaxis-transition['delta_l'])**2+linewidth**2/4)
             strength = transition["strength"]
@@ -669,11 +670,11 @@ class LorentzianPlot(HFPlot):
         lorentz_table = DataFrame(data={'xaxis': xaxis, 'totalline': totalline})  # , 'transition_data': transition_data})
         lorentz_source = ColumnDataSource(lorentz_table)
 
-        print "plotting transitions"
+        print("plotting transitions")
 
         p.line(x='xaxis', y='totalline', source=lorentz_source)
 
-        print "applying sliders"
+        print("applying sliders")
 
         lorentz_callback = models.CustomJS(
             args=dict(source=lorentz_source, b_field=b_field_slider, linewidth=linewidth_slider, transition_data=transition_data),
@@ -718,7 +719,7 @@ class LorentzianPlot(HFPlot):
         linewidth_slider.js_on_change('value', lorentz_callback)
 
         if display:
-            print "displaying Lorentzian diagram"
+            print("displaying Lorentzian diagram")
             show(row(p, column(b_field_slider, linewidth_slider)))
 
         return p, column(b_field_slider, linewidth_slider)
@@ -734,13 +735,15 @@ if __name__ == "__main__":
     pd.set_option('display.width', 1000)
 
     atom = Yb_171
+
+
     def MakeGrotrian(atom):
         g = Grotrian()
         levels = atom.levels.values()
         g.add_level(levels, color="black")
         g.add_transition(atom.transitions.values(), color=uv_ir_lookup)
 
-        g.build_figure(display=True)#, labels=["hf", "zeeman", "term"])
+        g.build_figure(display=True)  # , labels=["hf", "zeeman", "term"])
 
     def MakeMixedPlot(level0, level1):
         l = LorentzianPlot(level0, level1)
