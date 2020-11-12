@@ -643,8 +643,8 @@ class LorentzianPlot(HFPlot):
         from math import pi
         import sliders as sli
 
-        if labels is None:
-            labels = []
+        # if labels is None:
+        #     labels = []
         # TODO: implement labels
         if sliders is None:
             sliders = {}
@@ -660,7 +660,7 @@ class LorentzianPlot(HFPlot):
             x_range = (min(self.plot_arrow_table['delta_l']) - 1e-6, max(self.plot_arrow_table['delta_l']) + 1e-6)
         p = figure(title=title, plot_width=dimensions[0], plot_height=dimensions[1], x_range=x_range)
 
-        x_axis = np.linspace(min(self.plot_arrow_table['delta_l']) - 1e-6, max(self.plot_arrow_table['delta_l']) + 1e-6, 100000)
+        x_axis = np.linspace(min(self.plot_arrow_table['delta_l']) - 1e-6, max(self.plot_arrow_table['delta_l']) + 1e-6, 30000)
 
         lines = []
         for index, transition in self.plot_arrow_table.iterrows():
@@ -723,7 +723,8 @@ class LorentzianPlot(HFPlot):
                 for (var i=0; i< x_axis.length; i++){
                     let tot = 0;
                     for (var j=0; j<hf0.length; j++){
-                        tot += strength[j]*(0.5/Math.PI)*linewidth/((x_axis[i]-delta_l[j])*(x_axis[i]-delta_l[j])+linewidth*linewidth/4);
+                        tot += strength[j]*(0.5/Math.PI)*linewidth/((x_axis[i]-delta_l[j])*
+                        (x_axis[i]-delta_l[j])+linewidth*linewidth/4);
                     };
                     total_line[i] = tot;
                 };
@@ -749,8 +750,6 @@ if __name__ == '__main__':
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
-
-    atom = Yb_171
 
 
     def MakeGrotrian(atom):
@@ -782,14 +781,17 @@ if __name__ == '__main__':
         h.build_figure(display=True)
 
 
-    level0 = (atom.levels['2F*7/2'], 3)
-    level1 = (atom.levels['2F*7/2'], 4)
+    # level0 = (Yb_171.levels['2F*7/2'], 3)
+    # level1 = (Yb_171.levels['2F*7/2'], 4)
 
-    # level0 = (atom.levels['2S1/2'], 1)
-    # level1 = (atom.levels['2S1/2'], 0)
+    # level0 = (Yb_171.levels['2S1/2'], 1)
+    # level1 = (Yb_171.levels['2S1/2'], 0)
 
-    # level0 = (atom.levels['2D5/2'], 3)
-    # level1 = (atom.levels['2P*3/2'], 2)
+    # level0 = (Yb_171.levels['2D5/2'], 3)
+    # level1 = (Yb_171.levels['2P*3/2'], 2)
+
+    level0 = (Yb_173.levels['2F*7/2'], 3)
+    level1 = (Yb_173.levels['2F*7/2'], 2)
 
     # MakeGrotrian(Yb_173)
     MakeMixedPlot(level0, level1)
