@@ -152,8 +152,6 @@ class Transition:
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
         self.name = level_0.name + str(F_0) + str(m_F_0) + '->' + level_1.name + str(F_1) + str(m_F_1)
 
-        # self.transition_table = self.data_table()
-
     def data_table(self):
 
         table_0 = self.level_0.data_table()

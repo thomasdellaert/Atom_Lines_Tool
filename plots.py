@@ -253,14 +253,14 @@ class Grotrian:
                 var b_field = b_field.value;
                 var scale = scale.value;
 
-                hf = data['hf'];
-                z = data['z'];
-                y = data['y'];
-                y0 = data['y0'];
-                hfly = data['hfly'];
-                level = data['level'];
+                const hf = data['hf'];
+                const z = data['z'];
+                const y = data['y'];
+                const y0 = data['y0'];
+                const hfly = data['hfly'];
+                const level = data['level'];
 
-                for (i=0; i < y.length; i++) {
+                for (var i=0; i < y.length; i++) {
                     y[i] = hf[i]*scale + z[i]*b_field*scale + y0[i];
                     hfly[i] = y[i]
                     level[i] = y0[i] + hf[i] + z[i]*b_field;
@@ -273,19 +273,19 @@ class Grotrian:
                 var b_field = b_field.value;
                 var scale = scale.value;
 
-                hf0 = data['hf_0'];
-                hf1 = data['hf_1'];
-                z0 = data['z_0'];
-                z1 = data['z_1'];
-                y0 = data['y_0'];
-                y1 = data['y_1'];
-                y01 = data['y0_1'];
-                y00 = data['y0_0'];
-                level0 = data['level_0'];
-                level1 = data['level_1'];
-                delta_l = data['delta_l'];
+                const hf0 = data['hf_0'];
+                const hf1 = data['hf_1'];
+                const z0 = data['z_0'];
+                const z1 = data['z_1'];
+                const y0 = data['y_0'];
+                const y1 = data['y_1'];
+                const y01 = data['y0_1'];
+                const y00 = data['y0_0'];
+                const level0 = data['level_0'];
+                const level1 = data['level_1'];
+                const delta_l = data['delta_l'];
 
-                for (i=0; i < y0.length; i++) {
+                for (var i=0; i < y0.length; i++) {
                     y0[i] = hf0[i]*scale + z0[i]*b_field*scale + y00[i];
                     y1[i] = hf1[i]*scale + z1[i]*b_field*scale + y01[i];
                     level0[i] = y00[i] + hf0[i] + z0[i]*b_field;
@@ -294,10 +294,8 @@ class Grotrian:
                 };
                 source.change.emit();
             ''')
-        scale_slider.js_on_change('value', line_callback)
-        scale_slider.js_on_change('value', arrow_callback)
-        b_field_slider.js_on_change('value', line_callback)
-        b_field_slider.js_on_change('value', arrow_callback)
+        scale_slider.js_on_change('value', line_callback, arrow_callback)
+        b_field_slider.js_on_change('value', line_callback, arrow_callback)
 
         if display:
             print('displaying Grotrian diagram')
@@ -408,10 +406,10 @@ class HFPlot:
 
                 if term_0 == term_1:
                     strength = M1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
-                elif abs(L_0 - L_1) > 1:
+                elif abs(J_0 - J_1) > 1:
                     strength = E2_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
                 else:
-                    strength = E1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1)
+                    strength = E1_transition_strength_avg(I, L_0, S_0, J_0, F_0, m_F_0, L_1, S_1, J_1, F_1, m_F_1, depth=1)
 
                 if m_F_0 == m_F_1:
                     color = 'black'
@@ -425,7 +423,7 @@ class HFPlot:
                 # if E1_str == 0 and F_0 != F_1:
                 #     print 'strength for F={} m={} to F={} m={} was 0'.format(F_0, m_F_0, F_1, m_F_1)
                 if index0 <= index1 and strength != 0:
-                    if (self.internal and F_0 - F_1 == 0) or (F_0 - F_1 in [1, -1]):
+                    if (term_0 != term_1) or (self.internal) or (not self.internal and F_0 != F_1):
                         line = DataFrame(data={'F_0': [F_0], 'hf_0': [sl0['hf']], 'm_F_0': [m_F_0],
                                                'y_0': [sl0['y']], 'y0_0': [sl0['y0']], 'z_0': [sl0['z']],
                                                'F_1': [F_1], 'hf_1': [sl1['hf']], 'm_F_1': [m_F_1],
@@ -796,10 +794,10 @@ if __name__ == '__main__':
     # level0 = (Yb_171.levels['2D5/2'], 3)
     # level1 = (Yb_171.levels['2P*3/2'], 2)
 
-    level0 = (Yb_173.levels['2F*7/2'], 3)
-    level1 = (Yb_173.levels['2F*7/2'], 2)
+    level0 = (Yb_171.levels['2D3/2'], 2)
+    level1 = (Yb_171.levels['1[3/2]*3/2'], 2)
 
-    # MakeGrotrian(Yb_173)
+    # MakeGrotrian(Yb_171)
     MakeMixedPlot(level0, level1)
     # MakeLorentzPlot(level0, level1)
     # MakeHFPlot(level0, level1)
