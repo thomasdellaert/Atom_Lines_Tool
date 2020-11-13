@@ -21,21 +21,21 @@ def tkq_LS_transition_strength(I, k, q, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, 
 
 # The tensor math for E2 (and somewhat E1) transitions is adapted from Tony's thesis (Ransford 2020)
 
-def E1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
+def E1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=2):
     eps = eps / np.linalg.norm(eps)
     tot = 0
-    tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * 0.5 * (eps[0] + eps[1]) ** 2
-    tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * eps[2] ** 2
-    tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * 0.5 * (eps[0] + eps[1]) ** 2
+    tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * 0.5 * (eps[0] + eps[1]) ** 2
+    tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * eps[2] ** 2
+    tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * 0.5 * (eps[0] + eps[1]) ** 2
     return tot
 
 
-def E1_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
-    if (L1 - L0) % 2 == 1:
+def E1_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=2):
+    if True:  # (L1 - L0) % 2 == 1:
         tot = 0
-        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
-        tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
-        tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1, 0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=depth) * (1.0 / 3.0)
         return tot
     else:
         return 0
