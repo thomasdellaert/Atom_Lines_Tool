@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="atom_tab">
        <property name="enabled">
@@ -40,114 +40,111 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_AtomName">
-              <property name="text">
-               <string>Atom name</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="atomNameField">
-              <property name="clearButtonEnabled">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_NumStates">
-              <property name="text">
-               <string># of states to load</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="spinBoxNumStates">
-              <property name="maximum">
-               <number>200</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_ISpin">
-              <property name="text">
-               <string>I (nuclear spin)</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="doubleSpinBoxI">
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <double>10.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.500000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_hfCSV">
-              <property name="text">
-               <string>Hyperfine data CSV</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3">
-              <item>
-               <widget class="QPushButton" name="browseCSVButton">
+             <layout class="QFormLayout" name="formLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_AtomName">
                 <property name="text">
-                 <string>Browse</string>
+                 <string>Atom name</string>
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QLineEdit" name="hfCSVField"/>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_NumStates">
+                <property name="text">
+                 <string># of states to load</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_ISpin">
+                <property name="text">
+                 <string>I (nuclear spin)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="atomNameField">
+                <property name="clearButtonEnabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSpinBox" name="spinBoxNumStates">
+                <property name="maximum">
+                 <number>200</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBoxI">
+                <property name="decimals">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <double>10.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.500000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_hfCSV">
+                <property name="text">
+                 <string>Hyperfine data CSV</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                 <widget class="QPushButton" name="browseCSVButton">
+                  <property name="text">
+                   <string>Browse</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="hfCSVField"/>
+                </item>
+               </layout>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_DefaultA">
+                <property name="text">
+                 <string>Default A coefficient</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_DefaultB">
+                <property name="text">
+                 <string>Default B coefficient</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QDoubleSpinBox" name="spinBoxDefaultA">
+                <property name="suffix">
+                 <string>e-3</string>
+                </property>
+                <property name="decimals">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QDoubleSpinBox" name="spinBoxDefaultB">
+                <property name="suffix">
+                 <string>e-3</string>
+                </property>
+                <property name="decimals">
+                 <number>5</number>
+                </property>
+               </widget>
               </item>
              </layout>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_DefaultA">
-              <property name="text">
-               <string>Default A coefficient</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="spinBoxDefaultA">
-              <property name="suffix">
-               <string>e-3</string>
-              </property>
-              <property name="decimals">
-               <number>5</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_DefaultB">
-              <property name="text">
-               <string>Default B coefficient</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="spinBoxDefaultB">
-              <property name="suffix">
-               <string>e-3</string>
-              </property>
-              <property name="decimals">
-               <number>5</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="Line" name="line_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
             </item>
             <item>
              <widget class="Line" name="line">
@@ -165,19 +162,6 @@
                <string>Save atom</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </item>
