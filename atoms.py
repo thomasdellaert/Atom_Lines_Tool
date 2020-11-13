@@ -152,7 +152,7 @@ class Transition:
         self.parity_0, self.parity_1 = level_0.parity, level_1.parity
         self.name = level_0.name + str(F_0) + str(m_F_0) + '->' + level_1.name + str(F_1) + str(m_F_1)
 
-        self.transition_table = self.data_table()
+        # self.transition_table = self.data_table()
 
     def data_table(self):
 
@@ -163,7 +163,8 @@ class Transition:
         line_0 = line_0.drop(['J_frac', 'F_frac', 'm_F_frac'], axis=1)
         line_1 = line_1.drop(['J_frac', 'F_frac', 'm_F_frac'], axis=1)
         if line_0.empty or line_1.empty:
-            raise ValueError("The selected quantum numbers don't yield a transition. Check that they exist in the specified levels")
+            raise ValueError("The selected quantum numbers don't yield a transition."
+                             " Check that they exist in the specified levels")
         line_0.columns = [str(col) + '_0' for col in line_0.columns]
         line_1.columns = [str(col) + '_1' for col in line_1.columns]
         line_0 = line_0.reset_index(drop=True)
@@ -186,7 +187,7 @@ class Transition:
         d_J = self.J_1 - self.J_0
 
         transition_type = 'unknown'
-        if abs(d_J) <= 1 and not (self.J_0 == 0  and self.J_1 == 0):
+        if abs(d_J) <= 1 and not (self.J_0 == 0 and self.J_1 == 0):
             if abs(d_F) <= 1:
                 if self.parity_0 != self.parity_1:
                     transition_type = 'E1'

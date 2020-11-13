@@ -8,6 +8,7 @@ Classes:
 """
 
 import copy
+from pandas import DataFrame
 from bokeh.plotting import figure, ColumnDataSource, show
 import bokeh.models as models
 from bokeh.layouts import row, column, gridplot
@@ -743,9 +744,14 @@ class LorentzianPlot(HFPlot):
 
 
 if __name__ == '__main__':
-    from atom_library import *
+    import pandas as pd
+    from atom_import import load_from_pickle
     from colors import uv_ir_lookup
     from sliders import default_sliders
+
+    Yb_171 = load_from_pickle("171Yb.atom")
+    Yb_173 = load_from_pickle("173Yb.atom")
+    Yb_174 = load_from_pickle("174Yb.atom")
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)

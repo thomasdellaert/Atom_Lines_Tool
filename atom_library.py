@@ -25,12 +25,11 @@ def _populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1,
             ls.append(level)
         except Exception as e:
             print(e.__doc__)
-            print(e.message)
+            print(str(e))
     atom.add_level(ls)
     atom.rezero()
 
 # TODO: populate_transitions()
-# TODO: export atoms to JSON to avoid needing to reinitialize every time
 
 
 # region define 174Yb
@@ -75,4 +74,7 @@ print('171Yb Initialized')
 
 
 if __name__ == '__main__':
-    print(Yb_173.levels['2F*7/2'].hf_levels.values() - min(Yb_173.levels['2F*7/2'].hf_levels.values()))
+    from atom_import import pickle_atom
+    pickle_atom(Yb_171)
+    pickle_atom(Yb_173)
+    pickle_atom(Yb_174)
