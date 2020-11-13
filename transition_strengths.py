@@ -2,21 +2,26 @@ import py3nj as nj
 import numpy as np
 import warnings
 
-
-# noinspection PyTypeChecker
-def tkq_LS_transition_strength(I, k, q, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
-    if S0 == S1:
-        # TODO: Implement a depth parameter. i.e. allow the function to exclude certain six-j symbols if the relevant operator
-        #  can't reduce to that point (looking at you, M1 and M2 transitions)
-        return float((2 * J0 + 1) * (2 * J1 + 1) * (2 * F0 + 1) * (2 * F1 + 2) *
-                     # nj.wigner6j(int(L0 * 2), int(L1 * 2), int(k * 2),
-                     #             int(J1 * 2), int(J0 * 2), int(S0 * 2)) ** 2 *
-                     nj.wigner6j(int(J0 * 2), int(J1 * 2), int(k * 2),
-                                 int(F1 * 2), int(F0 * 2), int(I * 2)) ** 2 *
-                     nj.wigner3j(int(F1 * 2), int(k * 2), int(F0 * 2),
-                                 int(-M1 * 2), int(q * 2), int(M0 * 2)) ** 2)
+def kron_delta(a, b):
+    if a == b:
+        return 1.0
     else:
         return 0.0
+
+# noinspection PyTypeChecker
+def tkq_LS_transition_strength(I, k, q, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=2):
+    prod = 1
+    if depth > 1:
+        prod *= kron_delta(S0, S1) * (2 * J0 + 1) * (2 * J1 + 1) * \
+                nj.wigner6j(int(L0 * 2), int(L1 * 2), int(k * 2),
+                            int(J1 * 2), int(J0 * 2), int(S0 * 2)) ** 2
+    if depth > 0:
+        prod *= (2 * F0 + 1) * (2 * F1 + 2) * \
+                nj.wigner6j(int(J0 * 2), int(J1 * 2), int(k * 2),
+                            int(F1 * 2), int(F0 * 2), int(I * 2)) ** 2
+    prod *= nj.wigner3j(int(F1 * 2), int(k * 2), int(F0 * 2),
+                        int(-M1 * 2), int(q * 2), int(M0 * 2)) ** 2
+    return prod
 
 
 # The tensor math for E2 (and somewhat E1) transitions is adapted from Tony's thesis (Ransford 2020)
@@ -45,9 +50,11 @@ def M1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     eps = eps / np.linalg.norm(eps)
     tot = 0
     if S1 == S0 and L1 == L0:
-        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * 0.5 * (eps[0] + eps[1]) ** 2
-        tot += tkq_LS_transition_strength(I, 1,  0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * eps[2] ** 2
-        tot += tkq_LS_transition_strength(I, 1,  1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * 0.5 * (eps[0] + eps[1]) ** 2
+        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * \
+               0.5 * (eps[0] ** 2 + eps[1] ** 2)
+        tot += tkq_LS_transition_strength(I, 1,  0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * eps[2] ** 2
+        tot += tkq_LS_transition_strength(I, 1,  1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * \
+               0.5 * (eps[0] ** 2 + eps[1] ** 2)
         return tot
     else:
         return 0
@@ -56,9 +63,9 @@ def M1_transition_strength_geom(eps, I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
 def M1_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     tot = 0
     if S1 == S0 and L1 == L0:
-        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
-        tot += tkq_LS_transition_strength(I, 1,  0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
-        tot += tkq_LS_transition_strength(I, 1,  1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1, -1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1,  0, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * (1.0 / 3.0)
+        tot += tkq_LS_transition_strength(I, 1,  1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=1) * (1.0 / 3.0)
         return tot
     else:
         return 0
@@ -91,8 +98,6 @@ def E2_transition_strength_avg(I, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1):
     tot += tkq_LS_transition_strength(I, 2, 1, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (9.0 / 58.0)
     tot += tkq_LS_transition_strength(I, 2, 2, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1) * (4.0 / 15.0)
     return tot
-
-# TODO: Check the geometric factors on the averages for the E1 and M1 transitions
 
 # TODO: Make this work outside of LS coupling. Probably involves converting
 #  between LS, JJ, and JK couplings in a different .py file
