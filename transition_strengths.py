@@ -2,17 +2,12 @@ import py3nj as nj
 import numpy as np
 import warnings
 
-def kron_delta(a, b):
-    if a == b:
-        return 1.0
-    else:
-        return 0.0
 
 # noinspection PyTypeChecker
 def tkq_LS_transition_strength(I, k, q, L0, S0, J0, F0, M0, L1, S1, J1, F1, M1, depth=2):
     prod = 1
     if depth > 1:
-        prod *= kron_delta(S0, S1) * (2 * J0 + 1) * (2 * J1 + 1) * \
+        prod *= (S0 == S1) * (2 * J0 + 1) * (2 * J1 + 1) * \
                 nj.wigner6j(int(L0 * 2), int(L1 * 2), int(k * 2),
                             int(J1 * 2), int(J0 * 2), int(S0 * 2)) ** 2
     if depth > 0:
