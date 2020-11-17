@@ -5,7 +5,7 @@ from pandas import read_csv
 df_Yb = parse_NIST_levels('YbII_NIST_levels.csv')
 
 
-def _populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1, hf_source=None):
+def populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1, hf_source=None):
     ls = []
     hfs = None
     if n_levels == -1:
@@ -35,7 +35,7 @@ def _populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=-1,
 # region define 174Yb
 print('Initializing 174Yb')
 Yb_174 = Atom(name='174Yb')
-_populate_levels(df_Yb, Yb_174, I=0, n_levels=30)
+populate_levels(df_Yb, Yb_174, I=0, n_levels=30)
 Yb_174.rezero()
 print('174Yb Initialized')
 # endregion
@@ -43,7 +43,7 @@ print('174Yb Initialized')
 # region define 173Yb
 print('Initializing 173Yb')
 Yb_173 = Atom(name='173Yb')
-_populate_levels(df_Yb, Yb_173, I=2.5, n_levels=10, default_A=0.01e-3, default_B=0.0, hf_source='173Yb_Hyperfine.csv')
+populate_levels(df_Yb, Yb_173, I=2.5, n_levels=10, default_A=0.01e-3, default_B=0.0, hf_source='173Yb_Hyperfine.csv')
 Yb_173.add_transition([
     Transition(level_0=Yb_173.levels['2D5/2'], F_0=4, m_F_0=0, level_1=Yb_173.levels['2P*3/2'], F_1=3, m_F_1=0),
     Transition(level_0=Yb_173.levels['2S1/2'], F_0=3, m_F_0=0, level_1=Yb_173.levels['2P*1/2'], F_1=3, m_F_1=0),
@@ -57,7 +57,7 @@ print('173Yb Initialized')
 # region define 171Yb
 print('Initializing 171Yb')
 Yb_171 = Atom(name='171Yb')
-_populate_levels(df_Yb, Yb_171, I=0.5, n_levels=30, default_A=0.01e-3, hf_source='171Yb_Hyperfine.csv')
+populate_levels(df_Yb, Yb_171, I=0.5, n_levels=30, default_A=0.01e-3, hf_source='171Yb_Hyperfine.csv')
 
 Yb_171.add_transition([
     Transition(level_0=Yb_171.levels['2S1/2'], F_0=1, m_F_0=0, level_1=Yb_171.levels['2P*1/2'], F_1=1, m_F_1=0),
