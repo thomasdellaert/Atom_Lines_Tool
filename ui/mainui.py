@@ -21,6 +21,7 @@ class Ui(QtWidgets.QMainWindow):
         # Define the Atom Setup tab buttons
 
         self.loadNISTCSVButton.clicked.connect(self.nist_csv_file_browse)
+        self.loadAtomButton.clicked.connect(self.atom_file_browse)
         self.browseCSVButton.clicked.connect(self.hf_csv_file_browse)
         self.saveButton.clicked.connect(self.save_atom)
         self.createTransitionButton.clicked.connect(self.create_transition)
@@ -48,6 +49,14 @@ class Ui(QtWidgets.QMainWindow):
                             n_levels=self.spinBoxNumStates.value(),
                             hf_source=self.hfCSVField.text())
             self.loadedAtom.rezero()
+
+    def atom_file_browse(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                            "Load an atom", "", "Atom Files (*.atom)", options=options)
+        if filename:
+            self.loadedAtom = load_from_pickle(filename=filename)
 
     def hf_csv_file_browse(self):
         options = QtWidgets.QFileDialog.Options()
