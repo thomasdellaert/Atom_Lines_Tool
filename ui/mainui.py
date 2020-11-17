@@ -1,8 +1,10 @@
 from PyQt5 import QtWidgets, uic
 from atoms import Atom, EnergyLevel, Transition
 from atom_import import pickle_atom, load_from_pickle
+from atom_library import populate_levels
+from parsers import parse_NIST_levels
 import sys
-
+from warnings import warn
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
@@ -13,6 +15,7 @@ class Ui(QtWidgets.QMainWindow):
         # These should be dicts with "level", "F", and "m_F"
         self.ASSelectedLevel0: dict
         self.ASSelectedLevel1: dict
+        # A list of the selected transitions? Will need to look into getting selected items from QTreeView and QListView
         self.ASSelectedTransitions: list
 
         # Define the Atom Setup tab buttons
@@ -32,10 +35,19 @@ class Ui(QtWidgets.QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load a NIST csv", "", "CSV Files (*.csv)", options=options)
-        # TODO: Make this actually load the atom
         if filename:
-            # self.
-            print(filename)
+            if self.atomNameField.text() is (None or ""):
+                # TODO: Make it so that the load button is just greyed out until there's a name specified
+                warn("No atom name specified")
+                return
+            self.loadedAtom = Atom(name=self.atomNameField.text())
+            populate_levels(df=parse_NIST_levels(filename), atom=self.loadedAtom,
+                            I=self.doubleSpinBoxI.value(),
+                            default_A=self.spinBoxDefaultA.value(),
+                            default_B=self.spinBoxDefaultB.value(),
+                            n_levels=self.spinBoxNumStates.value(),
+                            hf_source=self.hfCSVField.text())
+            self.loadedAtom.rezero()
 
     def hf_csv_file_browse(self):
         options = QtWidgets.QFileDialog.Options()
@@ -46,14 +58,12 @@ class Ui(QtWidgets.QMainWindow):
         if filename:
             print(filename)
 
-    def save_atom(self, loaded_atom):
+    def save_atom(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save atom", "", "Atom Files (*.atom)", options=options)
-        # TODO: Make this actually pickle the atom as loaded
-
         if filename:
-            print(filename)
+            pickle_atom(self.loadedAtom, filename=filename)
 
     def create_transition(self):
         try:
