@@ -20,7 +20,9 @@ import pickle
 def pickle_atom(atom, filename=None):
     if filename is None:
         filename = atom.name
-    file = open(filename+".atom", "wb")
+    if filename.split(".", -1)[1] != "atom":
+        filename = filename+".atom"
+    file = open(filename, "wb")
     pickle.dump(atom, file)
     file.close()
 
