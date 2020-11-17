@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtCore
 from atoms import Atom, EnergyLevel, Transition
 from atom_import import pickle_atom, load_from_pickle
 from atom_library import populate_levels
@@ -87,6 +87,100 @@ class Ui(QtWidgets.QMainWindow):
     def delete_transition(self):
         self.loadedAtom.remove_transition(self.ASSelectedTransitions, mode="transitions")
         # TODO: Add this button and make it work
+
+
+# TODO Implement a model of the atom for views to act on
+class AtomModel(QtCore.QAbstractItemModel):
+    def __init__(self, atom, *args, **kwargs):
+        super(AtomModel, self).__init__(*args, **kwargs)
+        self.atom = atom
+        self._root = CustomNode(None)
+
+    def addChild(self, in_node, in_parent):
+        if not in_parent or not in_parent.isValid():
+            parent = self._root
+        else:
+            parent = in_parent.internalPointer()
+        parent.addChild(in_node)
+
+    def index(self, in_row, in_column, in_parent=None):
+        if not in_parent or not in_parent.isValid():
+            parent = self._root
+        else:
+            parent = in_parent.internalPointer()
+
+        if not QtCore.QAbstractItemModel.hasIndex(self, in_row, in_column, in_parent):
+            return QtCore.QModelIndex()
+
+        child = parent.child(in_row)
+        if child:
+            return QtCore.QAbstractItemModel.createIndex(self, in_row, in_column, in_parent)
+        else:
+            return QtCore.QModelIndex()
+
+    def parent(self, in_index):
+        if in_index.isValid():
+            p = in_index.internalPointer().parent()
+            if p:
+                return QtCore.QAbstractItemModel.createIndex(self, p.row(),0,p)
+        return QtCore.QModelIndex()
+
+    def rowCount(self, in_index):
+        if in_index.isValid():
+            return in_index.internalPointer().childCount()
+        return self._root.childCount()
+
+    def columnCount(self, in_index):
+        if in_index.isValid():
+            return in_index.internalPointer().columnCount()
+        return self._root.columnCount()
+
+    def data(self, in_index, role):
+        if not in_index.isValid():
+            return None
+        node = in_index.internalPointer()
+        if role == QtCore.Qt.DisplayRole:
+            return node.data(in_index.column())
+        return None
+
+class CustomNode(object):
+    def __init__(self, in_data):
+        self._data = in_data
+        if type(in_data) == tuple:
+            self._data = list(in_data)
+        if type(in_data) in (str) or not hasattr(in_data, "__getitem__"):
+            self._data = [in_data]
+
+        self._columncount = len(self._data)
+        self._children = []
+        self._parent = None
+        self._row = 0
+
+    def data(self, in_column):
+        if 0 <= in_column < len(self._data):
+            return self._data[in_column]
+
+    def columnCount(self):
+        return self._columncount
+
+    def childCount(self):
+        return len(self._children)
+
+    def child(self, in_row):
+        if 0 <= in_row < self.childCount():
+            return self._children[in_row]
+
+    def parent(self):
+        return self._parent
+
+    def row(self):
+        return self._row
+
+    def addChild(self, in_child):
+        in_child._parent = self
+        in_child._row = len(self._children)
+        self._children.append(in_child)
+        self._columncount = max(in_child.columnCount(), self._columncount)
 
 
 if __name__ == "__main__":
