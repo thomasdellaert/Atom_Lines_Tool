@@ -6,8 +6,11 @@ from pandas import read_csv
 def populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=0, hf_source=None):
     ls = []
     hfs = None
-    if n_levels == 0:
-        n_levels = len(df['index'])
+    print(n_levels)
+    if n_levels < 1:
+        print(len(df))
+        n_levels = len(df)
+    print(n_levels)
     if I != 0 and hf_source is not (None or ""):
         hfs = read_csv(hf_source, index_col=0)
     for i in range(n_levels):
@@ -22,6 +25,7 @@ def populate_levels(df, atom, I=0.0, default_A=0.0, default_B=0.0, n_levels=0, h
                     level.B_coeff = default_B
             ls.append(level)
         except Exception as e:
+            print("Error parsing line {}".format(i))
             print(e.__doc__)
             print(str(e))
     atom.add_level(ls)

@@ -12,7 +12,7 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         uic.loadUi('mainwindow.ui', self)
 
-        self.loadedAtom: Atom
+        self.loadedAtom = None
         # These should be dicts with "level", "F", and "m_F"
         self.ASSelectedLevel0: dict
         self.ASSelectedLevel1: dict
@@ -51,6 +51,8 @@ class Ui(QtWidgets.QMainWindow):
                             hf_source=self.hfCSVField.text())
             self.loadedAtom.rezero()
 
+            self.energyLevelTreeView.setModel(AtomTree(self.loadedAtom).model)
+
     def atom_file_browse(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
@@ -58,6 +60,7 @@ class Ui(QtWidgets.QMainWindow):
                                                             "Load an atom", "", "Atom Files (*.atom)", options=options)
         if filename:
             self.loadedAtom = load_from_pickle(filename=filename)
+            self.energyLevelTreeView.setModel(AtomTree(self.loadedAtom).model)
 
     def hf_csv_file_browse(self):
         options = QtWidgets.QFileDialog.Options()
@@ -95,7 +98,6 @@ class AtomModel(QtCore.QAbstractItemModel):
     def __init__(self, nodes):
         super(AtomModel, self).__init__()
         self._root = CustomNode(None)
-        print(nodes)
         for node in nodes:
             self._root.addChild(node)
 
@@ -195,9 +197,6 @@ class AtomTree:
         self.items = []
         self.atom = atom
         for name, level in self.atom.levels.items():
-            print(name)
-            print(level)
-            print(level.Fs)
             l = CustomNode(level)
             for F in level.Fs:
                 f = CustomNode([F])
@@ -206,17 +205,13 @@ class AtomTree:
                 l.addChild(f)
             self.items.append(l)
 
-        self.tw = QtWidgets.QTreeView()
-        self.tw.setModel(AtomModel(self.items))
+        self.model = AtomModel(self.items)
 
 
 if __name__ == "__main__":
     Yb171 = load_from_pickle("C:/Users/jippi/PycharmProjects/Atom_Lines_Tool/171Yb.atom")
 
     app = QtWidgets.QApplication(sys.argv)
-    # window = Ui()
-    # app.exec()
-
-    myAtom = AtomTree(Yb171)
-    myAtom.tw.show()
+    window = Ui()
     app.exec()
+

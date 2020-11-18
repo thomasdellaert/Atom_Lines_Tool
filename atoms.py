@@ -73,7 +73,7 @@ class EnergyLevel:
                 else:
                     FE2 = (3*IdotJ**2 + 1.5*IdotJ - I*(I+1)*J*(J+1))/(2.0*I*(2.0*I-1.0)*J*(2.0*J-1.0))
 
-                if J <= 1 or I <=1:
+                if J <= 1 or I <= 1:
                     FM3 = 0
                 else:
                     FM3 = (10*IdotJ**3 + 20*IdotJ**2 + 2*IdotJ*(-3*I*(I+1)*J*(J+1)+I*(I+1)+J*(J+1)+3)
