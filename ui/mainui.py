@@ -4,6 +4,7 @@ from atom_import import pickle_atom, load_from_pickle
 from atom_library import populate_levels
 from parsers import parse_NIST_levels
 import sys
+import numpy as np
 from warnings import warn
 
 class Ui(QtWidgets.QMainWindow):
@@ -91,74 +92,81 @@ class Ui(QtWidgets.QMainWindow):
 
 # TODO Implement a model of the atom for views to act on
 class AtomModel(QtCore.QAbstractItemModel):
-    def __init__(self, atom, *args, **kwargs):
-        super(AtomModel, self).__init__(*args, **kwargs)
-        self.atom = atom
+    def __init__(self, nodes):
+        super(AtomModel, self).__init__()
         self._root = CustomNode(None)
+        print(nodes)
+        for node in nodes:
+            self._root.addChild(node)
 
-    def addChild(self, in_node, in_parent):
-        if not in_parent or not in_parent.isValid():
+    def addChild(self, node, _parent):
+        if not _parent or not _parent.isValid():
             parent = self._root
         else:
-            parent = in_parent.internalPointer()
-        parent.addChild(in_node)
+            parent = _parent.internalPointer()
+        parent.addChild(node)
 
-    def index(self, in_row, in_column, in_parent=None):
-        if not in_parent or not in_parent.isValid():
+    def index(self, row, column, _parent=None):
+        if not _parent or not _parent.isValid():
             parent = self._root
         else:
-            parent = in_parent.internalPointer()
+            parent = _parent.internalPointer()
 
-        if not QtCore.QAbstractItemModel.hasIndex(self, in_row, in_column, in_parent):
+        if not QtCore.QAbstractItemModel.hasIndex(self, row, column, _parent):
             return QtCore.QModelIndex()
 
-        child = parent.child(in_row)
+        child = parent.child(row)
         if child:
-            return QtCore.QAbstractItemModel.createIndex(self, in_row, in_column, in_parent)
+            return QtCore.QAbstractItemModel.createIndex(self, row, column, child)
         else:
             return QtCore.QModelIndex()
 
-    def parent(self, in_index):
-        if in_index.isValid():
-            p = in_index.internalPointer().parent()
+    def parent(self, index):
+        if index.isValid():
+            p = index.internalPointer().parent()
             if p:
-                return QtCore.QAbstractItemModel.createIndex(self, p.row(),0,p)
+                return QtCore.QAbstractItemModel.createIndex(self, p.row(), 0, p)
         return QtCore.QModelIndex()
 
-    def rowCount(self, in_index):
-        if in_index.isValid():
-            return in_index.internalPointer().childCount()
+    def rowCount(self, index):
+        if index.isValid():
+            return index.internalPointer().childCount()
         return self._root.childCount()
 
-    def columnCount(self, in_index):
-        if in_index.isValid():
-            return in_index.internalPointer().columnCount()
+    def columnCount(self, index):
+        if index.isValid():
+            return index.internalPointer().columnCount()
         return self._root.columnCount()
 
-    def data(self, in_index, role):
-        if not in_index.isValid():
+    def data(self, index, role):
+        if not index.isValid():
             return None
-        node = in_index.internalPointer()
+        node = index.internalPointer()
         if role == QtCore.Qt.DisplayRole:
-            return node.data(in_index.column())
+            return node.data(index.column())
         return None
 
 class CustomNode(object):
-    def __init__(self, in_data):
-        self._data = in_data
-        if type(in_data) == tuple:
-            self._data = list(in_data)
-        if type(in_data) in (str) or not hasattr(in_data, "__getitem__"):
-            self._data = [in_data]
+    def __init__(self, data):
+        self._data = data
+        if type(data) == tuple:
+            self._data = list(data)
+        if type(data) == EnergyLevel:
+            self._data = [data]
+        if type(data) is str or not hasattr(data, "__getitem__"):
+            self._data = [data]
 
         self._columncount = len(self._data)
         self._children = []
         self._parent = None
         self._row = 0
 
-    def data(self, in_column):
-        if 0 <= in_column < len(self._data):
-            return self._data[in_column]
+    def data(self, column):
+        if 0 <= column < len(self._data):
+            if type(self._data[column]) == EnergyLevel:
+                return self._data[column].name
+            else:
+                return self._data[column]
 
     def columnCount(self):
         return self._columncount
@@ -166,9 +174,9 @@ class CustomNode(object):
     def childCount(self):
         return len(self._children)
 
-    def child(self, in_row):
-        if 0 <= in_row < self.childCount():
-            return self._children[in_row]
+    def child(self, row):
+        if 0 <= row < self.childCount():
+            return self._children[row]
 
     def parent(self):
         return self._parent
@@ -176,14 +184,39 @@ class CustomNode(object):
     def row(self):
         return self._row
 
-    def addChild(self, in_child):
-        in_child._parent = self
-        in_child._row = len(self._children)
-        self._children.append(in_child)
-        self._columncount = max(in_child.columnCount(), self._columncount)
+    def addChild(self, child):
+        child._parent = self
+        child._row = len(self._children)
+        self._children.append(child)
+        self._columncount = max(child.columnCount(), self._columncount)
+
+class AtomTree:
+    def __init__(self, atom):
+        self.items = []
+        self.atom = atom
+        for name, level in self.atom.levels.items():
+            print(name)
+            print(level)
+            print(level.Fs)
+            l = CustomNode(level)
+            for F in level.Fs:
+                f = CustomNode([F])
+                for mf in np.arange(-F, F+1, 1):
+                    f.addChild(CustomNode([str(mf)]))
+                l.addChild(f)
+            self.items.append(l)
+
+        self.tw = QtWidgets.QTreeView()
+        self.tw.setModel(AtomModel(self.items))
 
 
 if __name__ == "__main__":
+    Yb171 = load_from_pickle("C:/Users/jippi/PycharmProjects/Atom_Lines_Tool/171Yb.atom")
+
     app = QtWidgets.QApplication(sys.argv)
-    window = Ui()
+    # window = Ui()
+    # app.exec()
+
+    myAtom = AtomTree(Yb171)
+    myAtom.tw.show()
     app.exec()
