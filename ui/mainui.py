@@ -61,6 +61,11 @@ class Ui(QtWidgets.QMainWindow):
         if filename:
             self.loadedAtom = load_from_pickle(filename=filename)
             self.energyLevelTreeView.setModel(AtomTree(self.loadedAtom).model)
+            print("here1")
+            self.atomNameField.setText(self.loadedAtom.name)
+            print("here2", self.loadedAtom.I)
+            self.doubleSpinBoxI.setValue(self.loadedAtom.I)
+            print("here3")
 
     def hf_csv_file_browse(self):
         options = QtWidgets.QFileDialog.Options()
@@ -86,6 +91,7 @@ class Ui(QtWidgets.QMainWindow):
         except:
             pass
         # TODO: Make this work
+        self.ASSelectedLevel0
         print("creating transition")
 
     def delete_transition(self):

@@ -20,7 +20,10 @@ import jsons
 def pickle_atom(atom, filename=None):
     if filename is None:
         filename = atom.name
-    if filename.split(".", -1)[1] != "atom":
+    try:
+        if filename.split(".", -1)[1] != "atom":
+            filename = filename+".atom"
+    except IndexError:
         filename = filename+".atom"
     file = open(filename, "wb")
     pickle.dump(atom, file)
@@ -34,4 +37,6 @@ def load_from_pickle(filename):
 
 
 if __name__ == "__main__":
-    print(True)
+    a = load_from_pickle("171Yb.atom")
+    print(a.I)
+

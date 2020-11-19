@@ -202,6 +202,11 @@ class Atom:
                 raise Exception('{} is already a level in this atom. '.format(level.name))
             self.levels[level.name] = level
 
+        for lvl in self.levels.values():
+            self.I = lvl.I
+            print("ahere")
+            break
+
         self.transitions = {}
         for transition in transitions:
             self.transitions[transition.name] = transition
@@ -221,6 +226,7 @@ class Atom:
 
     def add_level(self, levels):
         for level in levels:
+            self.I = level.I
             self.levels[level.name] = level
         self.rezero()
 
